@@ -6,7 +6,7 @@
 
 ---
 
-## 🎯 KURS FALSLocalAFASI VA DARARAJALANISH
+## 🎯 KURS FALSAFASI VA DARAJALANISH
 Ushbu 14 soatlik workshop talabani **mutlaq 0 (boshlang'ich)** darajadan qabul qilib, bosqichma-bosqich **Enterprise darajadagi Mustaqil Vault Administratori (Master)** darajasiga olib chiqadi:
 
 ```text
