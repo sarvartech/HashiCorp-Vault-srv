@@ -6,10 +6,11 @@
 
 ## 📑 CHEAT SHEET MUNDARIJASI
 1. [Secrets (KV v2) CRUD & Versiyalash](#1-secrets-kv-v2-crud--versiyalash)
-2. [ACL Policies (Xavfsizlik Siyosati) CRUD](#2-acl-policies-crud)
-3. [AppRole & Secret-ID (Mikroservislar) CRUD](#3-approle--secret-id-crud)
-4. [Unseal, Seal, Tokenlar & Accessor Boshqaruvi](#4-unseal-seal-tokenlar--accessor-boshqaruvi)
-5. [Ekspress Qidiruv: Eng Ko'p Ishlatiladigan 10 Ta Buyruq](#5-eng-kop-ishlatiladigan-10-ta-buyruq)
+2. [Vault Buyruqlar Sintaksisining To'liq Anatomiyasi (PUT, GET, INPUT, LIST, OVERVIEW)](#2-vault-buyruqlar-sintaksisining-toliq-anatomiyasi-put-get-input-list-overview)
+3. [ACL Policies (Xavfsizlik Siyosati) CRUD](#3-acl-policies-crud)
+4. [AppRole & Secret-ID (Mikroservislar) CRUD](#4-approle--secret-id-crud)
+5. [Unseal, Seal, Tokenlar & Accessor Boshqaruvi](#5-unseal-seal-tokenlar--accessor-boshqaruvi)
+6. [Ekspress Qidiruv: Eng Ko'p Ishlatiladigan 10 Ta Buyruq](#6-eng-kop-ishlatiladigan-10-ta-buyruq)
 
 ---
 
@@ -31,7 +32,138 @@
 
 ---
 
-## 2. ACL POLICIES CRUD
+## 2. VAULT BUYRUQLAR SINTAKSISINING TO'LIQ ANATOMIYASI (PUT, GET, INPUT, LIST, OVERVIEW)
+
+Vault CLI barcha Unix/Linux dasturchilar uchun juda intuitiv va kuchli sintaksisga ega. Har bir buyruqning ishlash mexanizmi quyidagicha:
+
+### 📌 1. `OVERVIEW` — Buyruqlar Falsafasi va Darajalari
+Vaultda buyruqlar 2 ta katta guruhga bo'linadi:
+
+1. **High-Level (KV v2 Maxsus Buyruqlari):**
+   * Sintaksis: `vault kv <subcommand> [yo'l] [parametrlar]`
+   * Masalan: `vault kv put`, `vault kv get`, `vault kv patch`, `vault kv list`, `vault kv undelete`.
+   * *Afzalligi:* Avtomatik ravishda `/data/` va `/metadata/` prefikslarini o'zi qo'yadi, versiyalashni o'zi boshqaradi.
+2. **Low-Level (Generic REST API Buyruqlari):**
+   * Sintaksis: `vault <read|write|list|delete> [to'liq_api_yo'l]`
+   * Masalan: `vault read secret/data/organizations/sarvartech/billing/prod`
+   * *Qachon kerak:* `sys/`, `auth/`, `pki/`, `transit/` kabi tizim dvigatellari bilan ishlashda.
+3. 💡 **Oltin Flag: `-output-curl-string`**
+   * Agar har qanday Vault buyrug'iga ushbu flagni qo'shsangiz, u buyruqni bajarmasdan unga **100% teng keladigan tayyor `curl` so'rovini** ekranga chiqarib beradi:
+   ```bash
+   vault kv get -output-curl-string secret/organizations/sarvartech/billing/prod
+   # Natija: curl -H "X-Vault-Token: ..." https://vault-srv.sarvartech.uz/v1/secret/data/...
+   ```
+
+---
+
+### 📌 2. `PUT` — Ma'lumot Yozish va Saqlash Sintaksisi
+`put` buyrug'i berilgan yo'lga yangi secret yozadi yoki yangi versiya (v1 ➔ v2 ➔ v3) ochadi:
+
+```bash
+# 1. Inline (Bir nechta kalit-qiymatlarni qatorda yozish):
+vault kv put secret/organizations/sarvartech/billing/prod \
+    db_host="192.168.10.15" \
+    db_port=5432 \
+    db_user="billing_admin" \
+    db_pass="SuperSecret@2026"
+
+# 2. Fayldan o'qib yozish (@ prefiksi bilan):
+# Agar kalit qiymati uzun sertifikat, SSH private key yoki config bo'lsa:
+vault kv put secret/organizations/sarvartech/billing/prod \
+    tls_cert=@/etc/ssl/certs/app.crt \
+    tls_key=@/etc/ssl/private/app.key
+
+# 3. Butun bir JSON faylni bitta zarbda yuklash:
+vault kv put secret/organizations/sarvartech/billing/prod @appsettings.json
+
+# 4. Check-and-Set (-cas) optimistik blokirovkasi:
+# Faqat joriy versiya 2 bo'lsagina ustiga yozadi. Agar boshqa admin 3 qilib qo'ygan bo'lsa xato qaytaradi:
+vault kv put -cas=2 secret/organizations/sarvartech/billing/prod db_pass="NewPass2026"
+```
+
+---
+
+### 📌 3. `GET` — Ma'lumotni O'qish va Filtrlash Sintaksisi
+`get` buyrug'i maxfiy ma'lumotlarni o'qib, turli formatlarda taqdim etadi:
+
+```bash
+# 1. Standart o'qish (Eng oxirgi faol versiyani chiroyli jadvalda chiqaradi):
+vault kv get secret/organizations/sarvartech/billing/prod
+
+# 2. Tarixdagi aniq bir versiyani o'qish (-version):
+vault kv get -version=1 secret/organizations/sarvartech/billing/prod
+
+# 3. Dasturchilar uchun eng kerakli flag: -field (Faqat bitta maydon qiymatini olish)
+# Bash scriptlarda o'zgaruvchiga parolni yuklash:
+DB_PASSWORD=$(vault kv get -field=db_pass secret/organizations/sarvartech/billing/prod)
+echo "Yuklangan parol: $DB_PASSWORD"
+
+# 4. JSON formatda chiqarish va jq bilan filtrlash (-format=json):
+vault kv get -format=json secret/organizations/sarvartech/billing/prod | jq -r '.data.data.api_token'
+
+# 5. YAML formatda chiqarish (-format=yaml - Kubernetes / Ansible uchun):
+vault kv get -format=yaml secret/organizations/sarvartech/billing/prod
+```
+
+---
+
+### 📌 4. `INPUT` — Vaultga Ma'lumot Kiritishning 5 Ta Usuli
+Dasturchi va administratorlar ma'lumotni turli manbalardan uzatishi mumkin:
+
+1. **Inline Key-Value:**
+   `vault kv put secret/path key="qiymat" user="admin"`
+2. **Fayl orqali (`@`):**
+   `vault kv put secret/path id_rsa=@~/.ssh/id_rsa`
+3. **Standart Kirish Oqimi (`stdin` orqali `-` belgisi):**
+   ```bash
+   cat credentials.json | vault kv put secret/organizations/sarvartech/billing/prod -
+   # yoki:
+   echo '{"token": "live_sec_123"}' | vault kv put secret/organizations/sarvartech/billing/prod -
+   ```
+4. **Heredoc Sintaksisi (Fayl yaratmasdan multiline kiritish):**
+   ```bash
+   vault policy write developer-policy - <<EOF
+   path "secret/data/organizations/sarvartech/*" {
+     capabilities = ["read", "list"]
+   }
+   EOF
+   ```
+5. **Muhit O'zgaruvchilari (Environment Variables):**
+   * `VAULT_ADDR` — Server manzili (`https://vault-srv.sarvartech.uz`)
+   * `VAULT_TOKEN` — Sessiya tokeni (`hvs.CAES...`)
+   * `VAULT_FORMAT` — Standart chiqish formati (`json`, `table`, `yaml`)
+   * `VAULT_SKIP_VERIFY` — Test serverlarda SSL tekshiruvini chetlab o'tish (`1` yoki `0`)
+
+---
+
+### 📌 5. `LIST` — Kataloglar va Ob'yektlarni Ko'rish Sintaksisi
+`list` katalog ichidagi mavjud kalitlar va papkalarni daraxt ko'rinishida ko'rsatadi:
+
+```bash
+# 1. Tashkilot ichidagi barcha servislarni ko'rish:
+# MUHIM: Katalog bo'lgani uchun oxirida albatta "/" (slash) bo'lishi shart!
+vault kv list secret/organizations/sarvartech/
+
+# 2. Servis ichidagi muhitlarni ko'rish:
+vault kv list secret/organizations/sarvartech/billing/
+# Natija:
+# Keys
+# ----
+# dev
+# prod
+# stage
+
+# 3. JSON formatda olish (avtomatlashtirish va scriptlar uchun):
+vault kv list -format=json secret/organizations/sarvartech/ | jq -r '.[]'
+
+# 4. Generic Low-Level List (sys va auth uchun):
+vault list sys/policies/acl
+vault list auth/approle/role/
+```
+
+---
+
+## 3. ACL POLICIES CRUD
 
 > Siyosatlar yozish va xavfsizlik huquqlarini tekshirish amallari.
 
@@ -45,7 +177,7 @@
 
 ---
 
-## 3. APPROLE & SECRET-ID CRUD
+## 4. APPROLE & SECRET-ID CRUD
 
 > Mikroservislar va CI/CD tizimlari uchun inson aralashuvisiz kirish.
 
@@ -62,7 +194,7 @@
 
 ---
 
-## 4. UNSEAL, SEAL, TOKENLAR & ACCESSOR BOSHQARUVI
+## 5. UNSEAL, SEAL, TOKENLAR & ACCESSOR BOSHQARUVI
 
 > Server holati, shifrlash to'sig'i va foydalanuvchilar sessiyalari.
 
@@ -82,7 +214,7 @@
 
 ---
 
-## 5. ENG KO'P ISHLATILADIGAN 10 TA BUYRUQ
+## 6. ENG KO'P ISHLATILADIGAN 10 TA BUYRUQ
 
 ```bash
 # 1. Server holatini tekshirish
