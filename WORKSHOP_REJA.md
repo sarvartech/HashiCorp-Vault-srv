@@ -228,3 +228,25 @@ Ushbu 14 soatlik workshop talabani **mutlaq 0 (boshlang'ich)** darajadan qabul q
 3. Klaster halokatga uchraganda bir necha daqiqada zaxiradan to'liq qayta tiklash.
 4. Xavfsizlik bo'yicha audit jurnallarini o'qish va kiberhujumlarni aniqlash.
 5. Maxsus CLI (`vault-panel`) va Web panellarni o'zi mustaqil ishlab chiqish va integratsiya qilish.
+
+---
+
+## 💻 LABORATORIYA (LAB) INFRATUZILMASI VA TALABLARI
+
+### 🏢 1. Bizning Asosiy Master Muhitimiz (Efir va Dars uchun):
+* **Gipervizor:** Ofis/studiyamizdagi jismoniy **Proxmox VE Server**.
+* **Virtual Mashinalar (VM):**
+  * **OS:** Ubuntu 22.04 / 24.04 LTS yoki Rocky Linux 9 (x64)
+  * **Resurs:** 2 vCPU, 2-4 GB RAM, 20 GB NVMe/SSD
+  * **Tarmoq:** Bridged / NAT (Static LAN IP) + Barqaror Internet aloqasi
+  * **Domen:** `https://vault-srv.sarvartech.uz` (Nginx Reverse Proxy & SSL)
+
+### 👥 2. Talabalar va Tomoshabinlar Uchun Tavsiya:
+* **Majburiy qolip yo'q!** Har bir talaba o'ziga eng qulay va qo'lida bor bo'lgan muhitni tanlaydi va bizning efirga qarab bir xil buyruqlarni o'zida parallel bajaraveradi:
+  * 🖥️ **Variant A (Noutbukda bepul):** VirtualBox, VMware Workstation yoki Ubuntu Multipass / WSL2.
+  * 🏢 **Variant B (Mahalliy serverda):** O'zlarining Proxmox VE, ESXi yoki KVM gipervizorlari.
+  * ☁️ **Variant C (Bulutda - Cloud VPS):** Hetzner, Selectel, DigitalOcean, AWS yoki istalgan $4-5 lik Linux VPS.
+* **Talaba uchun minimal talablar:**
+  1. Istalgan Linux VM (Ubuntu yoki Rocky Linux).
+  2. SSH orqali terminalga kirish imkoni (PuTTY, MobaXterm, VS Code yoki Windows Terminal).
+  3. Barqaror internet (paketlarni yuklab olish uchun).

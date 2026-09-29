@@ -29,6 +29,22 @@
 
 ---
 
+<!-- SLIDE 2.1 -->
+# [SLAYD 2.1] Laboratoriya (LAB) Muhiti va Talablar
+- **Bizning Master Laboratoriyamiz:**
+  - Jismoniy **Proxmox VE Server** (Ubuntu 22.04/24.04 & Rocky Linux 9 VM lari).
+  - 2 vCPU, 2-4 GB RAM, 20 GB SSD, Bridged/NAT tarmoq, Internet.
+  - Domen: `https://vault-srv.sarvartech.uz` (Nginx TLS Proxy).
+- **Talabalar Uchun Erkinlik (Har kim o'ziga ma'qulini ishlatadi):**
+  - 💻 **Noutbukda:** VirtualBox, VMware Workstation yoki Multipass/WSL2.
+  - 🏢 **Ofis/Uy serverida:** O'zingizning Proxmox VE, ESXi yoki KVM gipervizoringiz.
+  - ☁️ **Bulutda (Cloud):** Hetzner, Selectel, DigitalOcean, AWS yoki istalgan VPS.
+  - 🌐 **Asosiy talab:** Faqat bitta toza Linux VM, SSH terminal va internet!
+- **Spiker Eslatmasi (Speaker Note):**
+  > *"Biz o'z laboratoriyamizda Proxmox VE serveridan foydalanib barcha VMlarni ko'taramiz. Ammo talabalar uchun hech qanday qat'iy cheklov yo'q! Xohlasangiz VMware, xohlasangiz VirtualBox, xohlasangiz bulutdagi VPS serveringizni oling va bizga qarab bir xil buyruqlarni bajaravering — natija hammada bir xil bo'ladi!"*
+
+---
+
 <!-- SLIDE 3 -->
 # [SLAYD 3] [0-DARAJA] Nega Vault? "Secret Sprawl" Falokati
 - **Klassik xatoliklar (90% kompaniyalar yo'l qo'yadigan xavf):**

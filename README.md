@@ -220,6 +220,16 @@ secret/
 
 ## 5. O'RNATISHDAN TORTIB PRODUCTIONGACHA: TO'LIQ YO'L
 
+### 💻 Laboratoriya (LAB) Muhiti va Talablar:
+* **Bizning Master Laboratoriyamiz:**
+  * Jismoniy **Proxmox VE Server** (Ofis / Studiya infratuzilmasi).
+  * **Virtual Mashinalar (VM):** Ubuntu 22.04/24.04 LTS yoki Rocky Linux 9 (2 vCPU, 2-4 GB RAM, 20 GB SSD, Bridged/NAT tarmoq, Internet).
+* **Talabalar Uchun Erkinlik (Har kim o'ziga ma'qulini ishlatadi):**
+  * 🖥️ **Noutbukda bepul:** VirtualBox, VMware Workstation yoki Ubuntu Multipass / WSL2.
+  * 🏢 **Mahalliy serverda:** Proxmox VE, ESXi yoki KVM gipervizori.
+  * ☁️ **Bulutda (Cloud):** Hetzner, Selectel, DigitalOcean, AWS yoki istalgan Linux VPS.
+  * 🌐 **Asosiy talab:** Bitta toza Linux tizimi, SSH terminal va barqaror Internet!
+
 ### 1-QADAM: Linux Server Tayyorlash va O'rnatish
 ```bash
 # HashiCorp rasmiy GPG kaliti va reposini ulash (Ubuntu/Debian)
