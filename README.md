@@ -13,6 +13,7 @@
 1. [Kirish: Nega Zamonaviy Dunyoga Vault Kerak? (Secret Sprawl Muammosi)](#1-kirish-nega-zamonaviy-dunyoga-vault-kerak)
 2. [Vault Qanday Ishlaydi? Asosiy Ishlash Prinsipi va Topologiyasi](#2-vault-qanday-ishlaydi-asosiy-ishlash-prinsipi)
 3. [Har Bir Terminning Chuqur Mantig'i va Mexanizmlar Foydasi](#3-har-bir-terminning-chuqur-mantigi)
+   * 3.1. [Secret, Policy va AppRole: Nima Uchun Kerak va Real Keys?](#31-secret-policy-va-approle-nima-uchun-kerak-va-real-keys)
 4. [Enterprise Daraxt Modeli (Production Tree Hierarchy)](#4-enterprise-daraxt-modeli)
 5. [O'rnatishdan Tortib Productiongacha: To'liq Yo'l Xaritasi](#5-ornatishdan-tortib-productiongacha-to'liq-yol)
 6. [Hozirgi Yangi Muhandislar (DevOps/DevSecOps) Vaultni Qanday Ishlatmoqda?](#6-zamonaviy-muhandislar-vaultni-qanday-ishlatmoqda)
@@ -182,6 +183,81 @@ Vaultni professional boshqarish uchun uning fundamental terminlarini tushunish s
   * Agar audit qurilmasi (Fayl yoki Syslog) to'lib qolsa yoki ishlamay qolsa — **Vault barcha so'rovlarni qabul qilishni darhol to'xtatadi!**
   * *"Auditga yozilmagan harakat — sodir bo'lishi mumkin emas!"*
 * **HMAC-SHA256 Xeshirlash:** Audit logga parollar ochiq matnda tushmaydi, barchasi bir tomonlama xeshlanadi.
+
+---
+
+### 3.1. SECRET, POLICY VA APPROLE: NIMA UCHUN KERAK VA REAL KEYS?
+
+Vaultning barcha imkoniyatlari **3 ta fundamental ustun** ustiga qurilgan:
+
+#### 🏛️ Hayotiy Analogiya (Bank Seyfi Misolida):
+* 💰 **SECRET:** Seyf ichidagi yashikda yotgan qimmatbaho xazina (masalan: *Production PostgreSQL bazasining paroli* yoki *Click/Payme API kaliti*).
+* 📜 **POLICY:** Seyf eshigidagi qat'iy xavfsizlik yo'riqnomasi: *"Faqat 'To'lov bo'limi' ushbu 12-raqamli yashikni ochib ko'ra oladi, lekin uni o'chirish yoki boshqa bo'limga qarash qat'iyan man etiladi"*.
+* 🤖 **APPROLE & SECRET-ID:** Inson emas, bankning avtomatik backend mikroservisi o'zini qanday tanitadi?
+  * **Role-ID:** Servisning ID-kartasi (Login).
+  * **Secret-ID:** Servisning dinamik bir martalik PIN-kodi (Parol).
+
+#### ⚖️ Taqqoslash Matritsasi: Qaysi Biri Qachon Ishlatiladi?
+
+| Holat / Ssenariy | Nima Ishlatiladi? | Qanday Amalga Oshiriladi? |
+| :--- | :--- | :--- |
+| **Parol va API kalitlarni xavfsiz saqlash kerak bo'lsa** | **SECRET (KV v2)** | `vault kv put secret/... db_pass="..."` |
+| **Dasturchiga faqat "Test" bazani ko'rishga ruxsat bermoqchisiz** | **POLICY** | Siyosat yozilib, dasturchi akkauntiga biriktiriladi (`capabilities = ["read"]`). |
+| **Docker ichidagi Backend servis Vaultdan parol olishi kerak** | **APPROLE & SECRET-ID** | Ilova `POST /v1/auth/approle/login` orqali Role-ID va Secret-ID ni taqdim etadi. |
+| **Xaker bitta mikroservisni buzib kirsa, boshqa servislarni himoyalash** | **POLICY (Deny)** | Xaker o'g'irlagan token bilan boshqa yo'llarga murojaat qilsa, Vault "403 Forbidden" beradi. |
+| **CI/CD pipeline yangi build qilganda parolni xavfsiz yetkazish** | **SECRET-ID (Wrapped)** | `-wrap-ttl=120s` orqali 2 daqiqalik shifrlangan qutida uzatiladi. |
+
+#### 🏦 Real-World Case: "SarvarTech" To'lov Servisi (5 Qadamda)
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1-QADAM: SECRET YARATILADI (Admin tomonidan)                                │
+│ vault kv put secret/organizations/sarvartech/payment/prod                   │
+│       db_user="payment_pg"                                                  │
+│       db_pass="Bank@2026#Secure"                                            │
+│       click_secret_key="live_sec_7781"                                      │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2-QADAM: POLICY YOZILADI (Xavfsizlik qoidasi)                               │
+│ payment-policy.hcl:                                                         │
+│ path "secret/data/organizations/sarvartech/payment/*" {                     │
+│   capabilities = ["read"]                                                   │
+│ }                                                                           │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 3-QADAM: APPROLE YARATILADI (Ilova uchun rol ochish)                        │
+│ vault write auth/approle/role/payment-service \                             │
+│     policies="payment-policy" \                                             │
+│     token_ttl=1h                                                            │
+│                                                                             │
+│ Role-ID olinadi:   "e7b29a14-41d2-..."                                      │
+│ Secret-ID olinadi: "98fa10b2-8c11-..."                                      │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 4-QADAM: ILOVA (PYTHON/NODE.JS) ISHGA TUSHGANDA LOGIN QILADI                │
+│ Ilova Vaultga murojaat qiladi:                                              │
+│ POST /v1/auth/approle/login                                                 │
+│ { "role_id": "e7b29a14...", "secret_id": "98fa10b2..." }                   │
+│                                                                             │
+│ Vault javobi: 1 soatlik CLIENT_TOKEN beradi: "hvs.CAESII..."                │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 5-QADAM: ILOVA MAXFIY PAROLLARNI O'QIB OLADI                                │
+│ Ilova o'sha token bilan murojaat qiladi:                                    │
+│ GET /v1/secret/data/organizations/sarvartech/payment/prod                   │
+│                                                                             │
+│ Natija: Ilova parollarni xotirasiga oladi va to'lovlarni amalga oshiradi!   │
+│ Muhimi: Ilova kodida yoki .env faylida hech qanday parol saqlanmadi!        │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
