@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zero to Mastering Vault: Production Administrator Workshop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #070d18;
+      --card-bg: rgba(15, 23, 42, 0.88);
+      --card-border: rgba(56, 189, 248, 0.22);
+      --accent-blue: #38bdf8;
+      --accent-indigo: #6366f1;
+      --accent-emerald: #10b981;
+      --accent-rose: #f43f5e;
+      --accent-amber: #f59e0b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --code-bg: #030712;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at 10% 15%, #0f172a 0%, #030712 100%);
+      color: var(--text-main);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Nav Bar */
+    header {
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-indigo));
+      padding: 5px 12px;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+    }
+
+    .top-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-main);
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-btn:hover {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      transform: translateY(-1px);
+    }
+
+    .slide-counter {
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.1);
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+
+    /* Presentation Screen Area */
+    main {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .slide {
+      position: absolute;
+      width: calc(100% - 60px);
+      max-width: 1280px;
+      height: calc(100% - 40px);
+      background: var(--card-bg);
+      backdrop-filter: blur(18px);
+      border: 1px solid var(--card-border);
+      border-radius: 22px;
+      padding: 38px 52px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.75), 0 0 35px rgba(56, 189, 248, 0.05);
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(0.96) translateX(40px);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      user-select: text;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1) translateX(0);
+    }
+
+    /* Slide Typography */
+    .slide-tag {
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      color: var(--accent-blue);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .slide-tag::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: var(--accent-blue);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent-blue);
+    }
+
+    .slide-title {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 22px;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .slide-body {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+
+    .slide-body.full-width {
+      grid-template-columns: 1fr;
+    }
+
+    .slide-body::-webkit-scrollbar {
+      width: 6px;
+    }
+    .slide-body::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+
+    /* Cards inside slides */
+    .info-card {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .info-card.highlight {
+      border-color: rgba(56, 189, 248, 0.3);
+      background: linear-gradient(180deg, rgba(56, 189, 248, 0.06) 0%, rgba(15, 23, 42, 0.65) 100%);
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bullet-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    .bullet-list li {
+      font-size: 14.5px;
+      line-height: 1.55;
+      color: #cbd5e1;
+      position: relative;
+      padding-left: 24px;
+    }
+
+    .bullet-list li::before {
+      content: '✔';
+      position: absolute;
+      left: 0;
+      color: var(--accent-emerald);
+      font-weight: bold;
+    }
+
+    .bullet-list.danger li::before {
+      content: '✖';
+      color: var(--accent-rose);
+    }
+
+    .bullet-list.warning li::before {
+      content: '⚠';
+      color: var(--accent-amber);
+    }
+
+    /* Code blocks */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .code-header {
+      background: #0d1322;
+      padding: 8px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .code-lang {
+      font-family: 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--accent-blue);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-muted);
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover {
+      color: #fff;
+      border-color: var(--accent-blue);
+    }
+
+    pre {
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 1.55;
+      padding: 16px;
+      color: #e2e8f0;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+
+    .code-keyword { color: #f43f5e; font-weight: 600; }
+    .code-str { color: #34d399; }
+    .code-var { color: #38bdf8; }
+    .code-comment { color: #64748b; font-style: italic; }
+
+    /* ASCII Diagram Box */
+    .diagram-box {
+      font-family: 'Fira Code', monospace;
+      background: #020617;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 12px;
+      padding: 16px;
+      color: #38bdf8;
+      font-size: 12px;
+      line-height: 1.35;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    /* Key-Value comparison table */
+    .custom-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+
+    .custom-table th {
+      text-align: left;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--accent-blue);
+      font-weight: 600;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .custom-table td {
+      padding: 11px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #cbd5e1;
+    }
+
+    /* Bottom Status Bar */
+    footer {
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: rgba(7, 13, 24, 0.95);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .live-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #ef4444;
+      font-weight: 700;
+      font-size: 11px;
+      background: rgba(239, 68, 68, 0.1);
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: #ef4444;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.2); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .progress-bar-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-indigo));
+      width: 0%;
+      transition: width 0.3s ease;
+      box-shadow: 0 0 10px var(--accent-blue);
+    }
+
+    /* Cover slide specific styles */
+    .cover-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      height: 100%;
+      gap: 22px;
+    }
+
+    .cover-badge {
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 6px 18px;
+      border-radius: 30px;
+      color: var(--accent-blue);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .cover-title {
+      font-size: 44px;
+      font-weight: 900;
+      line-height: 1.15;
+      background: linear-gradient(135deg, #ffffff 30%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      max-width: 950px;
+    }
+
+    .cover-subtitle {
+      font-size: 19px;
+      color: var(--text-muted);
+      max-width: 820px;
+      line-height: 1.5;
+    }
+
+    .cover-meta {
+      display: flex;
+      gap: 16px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .meta-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header>
+    <div class="brand">
+      <span class="brand-badge">0 TO MASTERING</span>
+      <span>Vault Production Administrator Workshop (14 Soat)</span>
+    </div>
+    <div class="top-controls">
+      <span class="slide-counter" id="slideNumber">1 / 19</span>
+      <button class="nav-btn" onclick="prevSlide()">◀ Oldingi (Left)</button>
+      <button class="nav-btn" onclick="nextSlide()">Keyingi (Right) ▶</button>
+      <button class="nav-btn" onclick="toggleFullScreen()">⛶ Fullscreen (F11)</button>
+    </div>
+  </header>
+
+  <!-- Slide Screen -->
+  <main>
+
+    <!-- SLIDE 1: COVER -->
+    <div class="slide active" data-slide="1">
+      <div class="cover-content">
+        <div class="cover-badge">ZERO TO MASTERING VAULT</div>
+        <h1 class="cover-title">0 dan HashiCorp Vault Administratorligigacha</h1>
+        <p class="cover-subtitle">7 kunlik intensiv jonli efir va amaliy laboratoriya kursi (Har kuni 2 soat, jami 14 soat)</p>
+        <div class="cover-meta">
+          <div class="meta-chip">📅 7 Kunlik Kurs (14 Soat)</div>
+          <div class="meta-chip">🔴 YouTube Live + Oflayn Talabalar</div>
+          <div class="meta-chip">🌐 https://vault-srv.sarvartech.uz</div>
+          <div class="meta-chip">🏆 Sertifikat & Real Production Daraja</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: 4 STAGES ROADMAP -->
+    <div class="slide" data-slide="2">
+      <div class="slide-tag">O'QUV YO'L XARITASI</div>
+      <h2 class="slide-title">4 Ta Bosqich: Noldan Master Darajasigacha</h2>
+      <div class="slide-body">
+        <div class="info-card highlight">
+          <div class="card-title">🌱 1-Bosqich: 0 Daraja (Fundamentals)</div>
+          <ul class="bullet-list">
+            <li>Nega .env o'lik? Secret Sprawl muammosi.</li>
+            <li>Kriptografiya: AES-256, RSA/ECC, SHA-256.</li>
+            <li>Encryption Barrier, mlock, Shamir Unseal.</li>
+            <li>Linux Serverda o'rnatish, Systemd va Nginx TLS.</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <div class="card-title">⚙️ 2-Bosqich: Amaliyotchi (Core Operator)</div>
+          <ul class="bullet-list">
+            <li>KV v1 vs KV v2 Engine va Versiyalash.</li>
+            <li>Multi-tenant Enterprise Daraxt (Production Tree).</li>
+            <li>REST API & cURL bilan ishlash.</li>
+            <li>Tokenlar, TTL, Lease va Token Accessor.</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <div class="card-title">🛡️ 3-Bosqich: DevSecOps (Automation)</div>
+          <ul class="bullet-list">
+            <li>Granular ACL Policies va Default Deny.</li>
+            <li>AppRole mexanizmi & Response Wrapping.</li>
+            <li>Dinamik Database Parollari (PostgreSQL/MySQL).</li>
+            <li>NAT va VLAN tarmoqlarida Bound CIDR.</li>
+          </ul>
+        </div>
+        <div class="info-card highlight">
+          <div class="card-title">👑 4-Bosqich: Master Admin (Enterprise HA)</div>
+          <ul class="bullet-list">
+            <li>PKI Engine: Dinamik TLS/SSL sertifikatlar.</li>
+            <li>Transit Engine (Encryption as a Service).</li>
+            <li>Fail-Closed Audit Logging & Forensika.</li>
+            <li>Raft HA Konsensus, Snapshot DR & Maxsus Panellar.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: PROBLEM STATEMENT -->
+    <div class="slide" data-slide="3">
+      <div class="slide-tag">0-BOSQICH: ASOSLAR</div>
+      <h2 class="slide-title">Nega HashiCorp Vault? "Secret Sprawl" Falokati</h2>
+      <div class="slide-body">
+        <div class="info-card">
+          <div class="card-title">❌ Kompaniyalarning 90% Yo'l Qo'yadigan Xatosi</div>
+          <ul class="bullet-list danger">
+            <li>Parollar va DB URL lar <code>.env</code> yoki config fayllarda ochiq matnda turadi.</li>
+            <li>Git repository'ga adashib secretlar commit bo'lib ketishi (GitHub Secrets Leak).</li>
+            <li>Har bir dasturchi ishlab chiqarish (production) bazasining root parolini biladi.</li>
+            <li>Parol o'zgarganda 20 ta mikroservisni qo'lda qayta konfiguratsiya qilish zarurati.</li>
+          </ul>
+        </div>
+        <div class="info-card highlight">
+          <div class="card-title">🛡️ Vault Taqdim Etadigan Yechim</div>
+          <ul class="bullet-list">
+            <li><strong>Yagona markaz:</strong> Barcha parollar, API kalitlar va sertifikatlar 1 joyda.</li>
+            <li><strong>AES-256 shifrlash:</strong> Diskdagi ma'lumot to'liq shifrlangan holatda yotadi.</li>
+            <li><strong>Vaqtinchalik kalitlar (TTL):</strong> Har bir token va parolga aniq umr beriladi.</li>
+            <li><strong>To'liq Audit:</strong> Har bir o'qish va yozish operatsiyasi IP va vaqti bilan muhrlanadi.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: ARCHITECTURE & MEMORY LOCKING -->
+    <div class="slide" data-slide="4">
+      <div class="slide-tag">0-BOSQICH: ICHKI YURAK</div>
+      <h2 class="slide-title">Encryption Barrier va Memory Locking (mlock)</h2>
+      <div class="slide-body">
+        <div class="info-card highlight">
+          <div class="card-title">🔐 Shifrlash To'sig'i (AES-GCM-256)</div>
+          <ul class="bullet-list">
+            <li>Storage Backend (Disk) da barcha ma'lumotlar shifrlangan blob ko'rinishida yotadi.</li>
+            <li>Disk o'g'irlansa yoki nusxalansa ham — Master Key'siz ma'lumotni o'qib bo'lmaydi.</li>
+            <li>Har bir yozish/o'qish operatsiyasida AES-GCM shifrlash to'sig'idan o'tadi.</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <div class="card-title">🧠 mlock (Memory Lock) Mexanizmi</div>
+          <ul class="bullet-list">
+            <li>Linux OS xotira to'lganda RAM ma'lumotlarini diskdagi SWAP faylga chiqaradi.</li>
+            <li><code>mlock</code> Vault xotirasidagi parollarni SWAP ga yozilishini jismonan to'sadi.</li>
+            <li>Zarur sozlama: <code>setcap cap_ipc_lock=+ep /usr/bin/vault</code>.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: SHAMIR'S SECRET SHARING -->
+    <div class="slide" data-slide="5">
+      <div class="slide-tag">0-BOSQICH: MUHRLASH</div>
+      <h2 class="slide-title">Shamir's Secret Sharing va Vault Holatlari</h2>
+      <div class="slide-body">
+        <div class="info-card highlight">
+          <div class="card-title">🔑 Shamir Mexanizmi: Nega 1 Kishi Ocholmaydi?</div>
+          <ul class="bullet-list">
+            <li>Master Key bir nechta bo'lakka bo'linadi (<strong>Key Shares = 5</strong>).</li>
+            <li>Uni qayta tiklash uchun minimal kalitlar soni belgilanadi (<strong>Threshold = 3</strong>).</li>
+            <li>3 ta alohida mas'ul admin o'z kalitini kiritmaguncha server xotirasi ochilmaydi.</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <div class="card-title">🔄 Vaultning 4 Ta Asosiy Holati</div>
+          <table class="custom-table">
+            <tr><th>Status</th><th>Ta'rifi</th></tr>
+            <tr><td><strong>Uninitialized</strong></td><td>Yangi o'rnatilgan, kalitlar hali mavjud emas.</td></tr>
+            <tr><td><strong>Sealed</strong></td><td>Server ishlayapti, lekin xotiradagi Master Key o'chirilgan, javob bermaydi.</td></tr>
+            <tr><td><strong>Unsealed</strong></td><td>Threshold kalitlar kiritildi, shifrlash to'sig'i ochildi.</td></tr>
+            <tr><td><strong>Active/Standby</strong></td><td>HA klasterda so'rovlarni qabul qiluvchi Leader yoki zaxira tugun.</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: DAY 1 LAB (INSTALL & SYSTEMD) -->
+    <div class="slide" data-slide="6">
+      <div class="slide-tag">1-KUN AMALIYOT</div>
+      <h2 class="slide-title">Vaultni O'rnatish, Init va Nginx TLS</h2>
+      <div class="slide-body">
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">HCL (/etc/vault.d/vault.hcl)</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code>storage "raft" {
+  path    = "/opt/vault/data"
+  node_id = "vault-node-1"
+}
+
+listener "tcp" {
+  address     = "127.0.0.1:8200"
+  tls_disable = 1
+}
+
+ui = true
+disable_mlock = false
+
+api_addr     = "https://vault-srv.sarvartech.uz"
+cluster_addr = "https://127.0.0.1:8201"</code></pre>
+        </div>
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">SYSTEMD VA INIT</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code><span class="code-comment"># Xizmatni yoqish</span>
+sudo systemctl enable --now vault
+sudo systemctl enable --now vault-auto-unseal
+
+<span class="code-comment"># Initsializatsiya</span>
+export VAULT_ADDR="http://127.0.0.1:8200"
+vault operator init -key-shares=5 -key-threshold=3
+
+<span class="code-comment"># Muhrni ochish</span>
+vault operator unseal &lt;UNSEAL_KEY_1&gt;
+vault operator unseal &lt;UNSEAL_KEY_2&gt;
+vault operator unseal &lt;UNSEAL_KEY_3&gt;</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: ENTERPRISE TREE -->
+    <div class="slide" data-slide="7">
+      <div class="slide-tag">AMALIYOTCHI BOSQICHI</div>
+      <h2 class="slide-title">Enterprise Daraxt (Production Tree) Modeli</h2>
+      <div class="slide-body">
+        <div class="diagram-box">
+secret/
+└── data/
+    └── organizations/
+        ├── sarvartech/
+        │   ├── payment-service/
+        │   │   ├── prod  --> { db_pass, api_key }
+        │   │   └── stage
+        │   └── mobile-api/
+        │       └── prod
+        └── agrobank/
+            └── core-billing/
+                └── prod</div>
+        <div class="info-card highlight">
+          <div class="card-title">📂 Nega Ushbu Strukturani Tanlaymiz?</div>
+          <ul class="bullet-list">
+            <li><strong>Multi-tenant:</strong> Bank filiallari va loyihalari mutlaq ajratiladi.</li>
+            <li><strong>Bir qatorli ACL siyosat:</strong> <code>path "secret/data/organizations/sarvartech/*"</code> orqali barcha servislar qamrab olinadi.</li>
+            <li><strong>Muhitlar nazorati:</strong> Prod, stage va dev kalitlari hech qachon aralashmaydi.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: KV v1 vs KV v2 -->
+    <div class="slide" data-slide="8">
+      <div class="slide-tag">SECRETS ENGINES</div>
+      <h2 class="slide-title">KV v1 va KV v2 O'rtasidagi Farqlar</h2>
+      <div class="slide-body full-width">
+        <table class="custom-table">
+          <thead>
+            <tr><th>Xususiyat</th><th>KV Engine v1</th><th>KV Engine v2 (Production Standart)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Versiyalash</strong></td><td>❌ Yo'q (Doim eski qiymat ustiga yoziladi)</td><td>✅ To'liq avtomatik (v1, v2, v3... saqlanadi)</td></tr>
+            <tr><td><strong>Qayta tiklash (Undelete)</strong></td><td>❌ Iloji yo'q</td><td>✅ Mumkin! (Soft-delete orqali tiklanadi)</td></tr>
+            <tr><td><strong>Check-And-Set (CAS)</strong></td><td>❌ Mavjud emas</td><td>✅ Bor (Bir vaqtda 2 admin qiymatni buzib qo'ymaydi)</td></tr>
+            <tr><td><strong>Metadata</strong></td><td>❌ Yo'q</td><td>✅ Qachon yaratildi, kim yozdi, o'chirilgan vaqti saqlanadi</td></tr>
+            <tr><td><strong>API yo'li</strong></td><td><code>/v1/secret/my-app</code></td><td><code>/v1/secret/data/my-app</code> va <code>/v1/secret/metadata/my-app</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: KV COMMANDS -->
+    <div class="slide" data-slide="9">
+      <div class="slide-tag">2-KUN AMALIYOT</div>
+      <h2 class="slide-title">KV v2 Buyruqlar Bazasi va REST API</h2>
+      <div class="slide-body">
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">BASH CLI</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code><span class="code-comment"># Yozish (Put)</span>
+vault kv put secret/organizations/sarvartech/billing/prod \
+    db_user="db_admin" \
+    db_pass="SuperSecret@2026"
+
+<span class="code-comment"># Qisman yangilash (Patch)</span>
+vault kv patch secret/organizations/sarvartech/billing/prod \
+    api_key="sk_live_9921"
+
+<span class="code-comment"># O'qish (Get) va Versiyalar</span>
+vault kv get secret/organizations/sarvartech/billing/prod
+vault kv get -version=1 secret/organizations/sarvartech/billing/prod</code></pre>
+        </div>
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">REST API (cURL)</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code><span class="code-comment"># HTTP GET orqali secretni o'qish</span>
+curl -s -H "X-Vault-Token: $TOKEN" \
+  https://vault-srv.sarvartech.uz/v1/secret/data/organizations/sarvartech/billing/prod \
+  | jq '.data.data'
+
+<span class="code-comment"># Soft-delete va Undelete</span>
+vault kv delete -versions=2 secret/organizations/sarvartech/billing/prod
+vault kv undelete -versions=2 secret/organizations/sarvartech/billing/prod</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: TOKENS & ACCESSOR -->
+    <div class="slide" data-slide="10">
+      <div class="slide-tag">AMALIYOTCHI BOSQICHI</div>
+      <h2 class="slide-title">Tokenlar Turlari, TTL va Accessor Mexanizmi</h2>
+      <div class="slide-body">
+        <div class="info-card highlight">
+          <div class="card-title">🎟️ Token Turlari va Xususiyatlari</div>
+          <ul class="bullet-list">
+            <li><strong>Service Token:</strong> Standart token. Vault xotirasida saqlanadi, ota-bola bog'liqligi bor.</li>
+            <li><strong>Batch Token:</strong> Xotirada saqlanmaydi (stateless). Juda yuqori RPS va tezkor so'rovlar uchun.</li>
+            <li><strong>Orphan Token:</strong> Otasi yo'q token. Agar otasi revoke bo'lsa ham bu token tirik qoladi.</li>
+            <li><strong>Num_uses cheklovi:</strong> <code>-use-limit=1</code> orqali faqat bir marta o'qiladigan token yaratiladi.</li>
+          </ul>
+        </div>
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">TOKEN ACCESSOR AMALLARI</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code><span class="code-comment"># 1. 2 soatlik cheklangan token yaratish</span>
+vault token create -ttl=2h -use-limit=2 -policy=billing
+
+<span class="code-comment"># 2. Accessor orqali tokenni qidirish (Tokenning o'zini bilmasdan!)</span>
+vault token lookup -accessor "a6KNiBTnyMT..."
+
+<span class="code-comment"># 3. Accessor orqali bekor qilish (Revoke)</span>
+vault token revoke -accessor "a6KNiBTnyMT..."</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: ACL POLICIES -->
+    <div class="slide" data-slide="11">
+      <div class="slide-tag">DEVSECOPS BOSQICHI</div>
+      <h2 class="slide-title">ACL Policies (Ruxsatnomalar Yozish San'ati)</h2>
+      <div class="slide-body">
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">HCL (billing-policy.hcl)</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code><span class="code-comment"># Faqat billing servisiga o'qish ruxsati berish</span>
+path "secret/data/organizations/sarvartech/billing/*" {
+  capabilities = ["read", "list"]
+}
+
+<span class="code-comment"># Metadatasini ko'rish</span>
+path "secret/metadata/organizations/sarvartech/billing/*" {
+  capabilities = ["list", "read"]
+}
+
+<span class="code-comment"># Boshqa hamma yo'llar taqiqlanadi (Default Deny)</span>
+path "secret/*" {
+  capabilities = ["deny"]
+}</code></pre>
+        </div>
+        <div class="info-card">
+          <div class="card-title">🛡️ ACL Capabilities Tahlili</div>
+          <ul class="bullet-list">
+            <li><code>create</code> — Yangi secret yaratish imkoni.</li>
+            <li><code>read</code> — Mavjud secretni o'qish.</li>
+            <li><code>update</code> — Mavjud secret ustiga yozish / patch qilish.</li>
+            <li><code>delete</code> — O'chirish (soft delete yoki metadata delete).</li>
+            <li><code>sudo</code> — Faqat tizim administratorlari uchun xavfli ruxsat (oddiy dasturchiga berilmaydi!).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 12: DYNAMIC DATABASE SECRETS -->
+    <div class="slide" data-slide="12">
+      <div class="slide-tag">DEVSECOPS BOSQICHI</div>
+      <h2 class="slide-title">Dinamik Database Parollari (PostgreSQL / MySQL)</h2>
+      <div class="slide-body">
+        <div class="info-card highlight">
+          <div class="card-title">🔄 Nega Statik Baza Parollari O'tmishda Qoldi?</div>
+          <ul class="bullet-list">
+            <li>Agar bitta dasturchi parolni bilsa yoki logga tushsa — butun baza xavf ostida qoladi.</li>
+            <li>Vault har bir ilova so'rovida bazada yangi foydalanuvchi yaratadi: <code>v-approle-xyz</code>.</li>
+            <li>Unga faqat <strong>1 soatlik umr (TTL = 1h)</strong> beriladi.</li>
+            <li>Muddati o'tgach — Vault ushbu userni bazadan jismonan o'chiradi (REVOKE & DROP).</li>
+          </ul>
+        </div>
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">BASH DATABASE ENGINE</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code>vault secrets enable database
+
+vault write database/config/postgresql \
+    plugin_name=postgresql-database-plugin \
+    allowed_roles="billing-role" \
+    connection_url="postgresql://{{username}}:{{password}}@localhost:5432/bank_db" \
+    username="vault_admin" \
+    password="VaultAdminPassword"
+
+<span class="code-comment"># Har safar yangi 1 soatlik parol olish:</span>
+vault read database/creds/billing-role</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 13: PKI DYNAMIC TLS CERTS -->
+    <div class="slide" data-slide="13">
+      <div class="slide-tag">MASTER ADMIN BOSQICHI</div>
+      <h2 class="slide-title">PKI Engine: Dinamik TLS/SSL Sertifikatlari</h2>
+      <div class="slide-body">
+        <div class="info-card highlight">
+          <div class="card-title">🔐 Avtomatik Ichki CA (Certificate Authority)</div>
+          <ul class="bullet-list">
+            <li>Vault ichki korporativ CA vazifasini bajaradi.</li>
+            <li>Mikroservis ishga tushganda Vaultdan 30 kunlik o'ziga xos X.509 TLS sertifikat oladi.</li>
+            <li>Har 15 kunda avtomatik yangilanadi (Zero-downtime mTLS).</li>
+            <li>Qo'lda sertifikat o'rnatish va muddati o'tib to'xtab qolish xavfi yo'qoladi.</li>
+          </ul>
+        </div>
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">PKI SERTIFIKAT GENERATSIYASI</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code>vault secrets enable pki
+
+vault write pki/root/generate/internal \
+    common_name="SarvarTech Internal CA" \
+    ttl=87600h
+
+<span class="code-comment"># Mikroservisga dinamik sertifikat berish</span>
+vault write pki/issue/internal-services \
+    common_name="billing.sarvartech.uz" \
+    ttl="720h"</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 14: TRANSIT ENGINE (EaaS) -->
+    <div class="slide" data-slide="14">
+      <div class="slide-tag">MASTER ADMIN BOSQICHI</div>
+      <h2 class="slide-title">Transit Engine: Shifrlash Xizmati (EaaS)</h2>
+      <div class="slide-body">
+        <div class="info-card">
+          <div class="card-title">🛡️ Encryption as a Service Tamoyili</div>
+          <ul class="bullet-list">
+            <li>Ma'lumot Vaultda <strong>SAQLANMAYDI</strong>.</li>
+            <li>Ilova Vaultga ochiq matn (masalan, pasport yoki karta raqami) yuboradi.</li>
+            <li>Vault uni AES-GCM bilan shifrlab qaytaradi: <code>vault:v1:8f7e...</code>.</li>
+            <li>Ilova o'z bazasida faqat shifrlangan satrni saqlaydi.</li>
+            <li>O'qish kerak bo'lganda — Vaultga berib yechtirib oladi (<code>transit/decrypt</code>).</li>
+          </ul>
+        </div>
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">TRANSIT ENCRYPT / DECRYPT</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code>vault secrets enable transit
+vault write -f transit/keys/customer-cards
+
+<span class="code-comment"># Shifrlash (Encrypt)</span>
+vault write transit/encrypt/customer-cards \
+    plaintext=$(echo "8600 1234 5678 9900" | base64)
+
+<span class="code-comment"># Shifrni yechish (Decrypt)</span>
+vault write transit/decrypt/customer-cards \
+    ciphertext="vault:v1:s8D..."</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 15: AUDIT LOGGING -->
+    <div class="slide" data-slide="15">
+      <div class="slide-tag">MASTER ADMIN BOSQICHI</div>
+      <h2 class="slide-title">Audit Logging: Bank Darajasidagi Nazorat</h2>
+      <div class="slide-body">
+        <div class="info-card highlight">
+          <div class="card-title">📜 Fail-Closed Tamoyili</div>
+          <ul class="bullet-list">
+            <li>Agar Audit qurilmasi (File yoki Syslog) ishlamasa yoki disk to'lib qolsa — <strong>Vault yangi so'rovlarni qabul qilishni to'xtatadi!</strong></li>
+            <li>Barcha maxfiy kalitlar va tokenlar logga tushishdan oldin <code>HMAC-SHA256</code> orqali xeshirlanadi (parollar ochiq holda ko'rinmaydi).</li>
+          </ul>
+        </div>
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">AUDIT YOQISH VA JONLI TAHLIL</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code><span class="code-comment"># 1. Fayl audit qurilmasini yoqish</span>
+vault audit enable file file_path=/var/log/vault/vault_audit.log
+
+<span class="code-comment"># 2. Real-time audit oqimini kuzatish (jq bilan)</span>
+tail -f /var/log/vault/vault_audit.log | jq '{
+  time: .time,
+  type: .type,
+  path: .request.path,
+  ip: .request.remote_address,
+  error: .error
+}'</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 16: VAULT-PANEL & WEB CONSOLE -->
+    <div class="slide" data-slide="16">
+      <div class="slide-tag">BOSHQARUV QUROLLARI</div>
+      <h2 class="slide-title">vault-panel CLI va Web Konsol Arxitekturasi</h2>
+      <div class="slide-body">
+        <div class="info-card highlight">
+          <div class="card-title">💻 vault-panel (CLI Console)</div>
+          <ul class="bullet-list">
+            <li>Tashkilotlar va servislar daraxti boshqaruvi.</li>
+            <li>Avtomatik kriptografik parol generatori (24 belgili, yuqori entropiya).</li>
+            <li>1-klikda Source IP bog'langan tokenlar yaratish.</li>
+            <li>1-klikda Raft shifrlangan Backup va Restore.</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <div class="card-title">🌐 Web Management Console</div>
+          <ul class="bullet-list">
+            <li><strong>🔍 Spotlight (Ctrl+K):</strong> Bir necha millisekundda qidiruv.</li>
+            <li><strong>🧪 Live Test Request:</strong> Dasturchiga berishdan oldin Vaultga so'rov yuborib javob kodini (200 OK) va kechikishni (16ms) ko'rish.</li>
+            <li><strong>📋 6 Tilda Tayyor SDK:</strong> .env, cURL, Python, Node.js, Go, PHP.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 17: RAFT DR & PRODUCTION DOCTOR -->
+    <div class="slide" data-slide="17">
+      <div class="slide-tag">ZAXIRALASH VA TIKLASH</div>
+      <h2 class="slide-title">Raft Snapshot (DR) va Production Doctor</h2>
+      <div class="slide-body">
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">SNAPSHOT SAVE & RESTORE</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code><span class="code-comment"># 1. Zaxira nusxa (Snapshot) olish</span>
+vault operator raft snapshot save /backups/vault_backup_$(date +%F).snap
+
+<span class="code-comment"># 2. Server halokatga uchraganda to'liq qayta tiklash</span>
+vault operator raft snapshot restore -force /backups/vault_backup_2026-09-29.snap
+
+<span class="code-comment"># 3. Statusni tekshirish</span>
+vault status</code></pre>
+        </div>
+        <div class="info-card">
+          <div class="card-title">🩺 Production Doctor Har Kuni Tekshiradigan 6 Nuqta</div>
+          <ul class="bullet-list">
+            <li>Vault holati (Sealed: false).</li>
+            <li>Auto-unseal servisi (vault-auto-unseal faolmi?).</li>
+            <li>Disk xotirasi (80% dan oshmasligi lozim).</li>
+            <li>Audit log hajmi va rotatsiyasi (logrotate).</li>
+            <li>Nginx Reverse Proxy va TLS sertifikat muddati.</li>
+            <li>RAM bandligi va mlock holati.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 18: FORBIDDEN MISTAKES -->
+    <div class="slide" data-slide="18">
+      <div class="slide-tag">XATOLARDAN SABOQ</div>
+      <h2 class="slide-title">Administratorning 5 Ta Qat'iy Taqiqlangan Xatosi!</h2>
+      <div class="slide-body full-width">
+        <div class="info-card">
+          <ul class="bullet-list danger" style="gap: 16px;">
+            <li><strong>1. Root tokenni dasturchilarga yoki .env fayllarga tarqatish:</strong> Root token faqat favqulodda holat uchun. Boshlang'ich sozlashdan keyin darhol bekor (revoke) qilinishi shart!</li>
+            <li><strong>2. Unseal kalitlarini serverning o'zida /root/keys.txt da qoldirish:</strong> Server buzilsa — Vault ham darhol dushman qo'liga o'tadi.</li>
+            <li><strong>3. Audit Device'ni yoqmasdan Productionga chiqish:</strong> Audit yo'q bo'lsa — kim qaysi parolni o'g'irlaganini hech qachon isbotlab bo'lmaydi.</li>
+            <li><strong>4. Hamma narsaga "secret/*" va "sudo" ruxsatlarini berish:</strong> Bu Vaultni shunchaki xavfli oddiy bazaga aylantirib qo'yadi.</li>
+            <li><strong>5. Zaxira nusxasini (Snapshot) tiklab ko'rmaslik:</strong> Sinovdan o'tmagan zaxira — bu umuman mavjud bo'lmagan zaxiradir!</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 19: Q&A & CERTIFICATION -->
+    <div class="slide" data-slide="19">
+      <div class="cover-content">
+        <div class="cover-badge">YAKUNIY IMTIHON VA SERTIFIKATLASH</div>
+        <h1 class="cover-title">Savollar va Ochiq Muhokama</h1>
+        <p class="cover-subtitle">Jonli efir tomoshabinlari va Oflayn auditoriya talabalari savollari</p>
+        <div class="cover-meta">
+          <div class="meta-chip">💬 YouTube Chat & Mikrofon</div>
+          <div class="meta-chip">📝 Master Darajadagi Laboratoriya Imtihoni</div>
+          <div class="meta-chip">🏆 14 Soatlik Workshop Muvaffaqiyatli Yakunlandi!</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bottom Navigation & Progress -->
+  <footer>
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <span class="live-indicator"><span class="live-dot"></span> ZERO TO MASTERING VAULT</span>
+      <span>Tugmalar: <strong>[←]</strong> Oldingi, <strong>[→]</strong> yoki <strong>[Bo'shliq]</strong> Keyingi, <strong>[F11]</strong> To'liq ekran</span>
+    </div>
+    <div style="font-family: 'Fira Code', monospace; color: var(--accent-blue);">
+      https://vault-srv.sarvartech.uz • 14 Soatlik Masterclass
+    </div>
+    <div class="progress-bar-container">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+  </footer>
+
+  <script>
+    let currentSlide = 1;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const slideNumberDisplay = document.getElementById('slideNumber');
+    const progressBar = document.getElementById('progressBar');
+
+    function updateSlide() {
+      slides.forEach((s, idx) => {
+        if (idx + 1 === currentSlide) {
+          s.classList.add('active');
+        } else {
+          s.classList.remove('active');
+        }
+      });
+      slideNumberDisplay.textContent = `${currentSlide} / ${totalSlides}`;
+      const progressPercent = (currentSlide / totalSlides) * 100;
+      progressBar.style.width = `${progressPercent}%`;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    function copyCode(btn) {
+      const pre = btn.closest('.code-container').querySelector('pre');
+      navigator.clipboard.writeText(pre.innerText).then(() => {
+        const originalText = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.style.color = '#10b981';
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.color = '';
+        }, 2000);
+      });
+    }
+
+    // Keyboard navigation
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'Home') {
+        currentSlide = 1;
+        updateSlide();
+      } else if (e.key === 'End') {
+        currentSlide = totalSlides;
+        updateSlide();
+      }
+    });
+
+    // Initialize progress bar
+    updateSlide();
+  </script>
+</body>
+</html>

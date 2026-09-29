@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="uz" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vault Enterprise Web Console - SarvarTech</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Global Toast Notifications -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Authentication Modal / Overlay (If not logged in) -->
+  <div id="auth-modal" class="auth-modal-overlay">
+    <div class="auth-card glass-panel animate-fade-in">
+      <div class="auth-brand">
+        <div class="logo-icon glow-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        <div class="brand-text">
+          <h2>VAULT ENTERPRISE</h2>
+          <span class="badge badge-brand">SarvarTech Secure Core</span>
+        </div>
+      </div>
+      <p class="auth-subtitle">Tizimga kirish uchun Vault server manzili va Admin / Root tokenni kiriting</p>
+
+      <form id="login-form" class="auth-form">
+        <div class="form-group">
+          <label for="auth-vault-addr">Vault Server URL</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            <input type="text" id="auth-vault-addr" placeholder="https://vault-srv.sarvartech.uz" value="https://vault-srv.sarvartech.uz" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="auth-vault-token">Root / Admin Token</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+            <input type="password" id="auth-vault-token" placeholder="hvs.CAES..." required autocomplete="off">
+            <button type="button" class="btn-icon toggle-password" onclick="togglePasswordVisibility('auth-vault-token')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="quick-servers">
+          <span class="quick-title">Tezkor manzillar:</span>
+          <button type="button" class="btn-chip" onclick="setQuickAddr('https://vault-srv.sarvartech.uz')">🌐 Domain (Proxy)</button>
+          <button type="button" class="btn-chip" onclick="setQuickAddr('http://192.168.86.128:8200')">🖥️ Test Server (86.128)</button>
+          <button type="button" class="btn-chip" onclick="setQuickAddr('http://192.168.88.18:8200')">🏢 Prod Server (88.18)</button>
+        </div>
+
+        <button type="submit" id="btn-login-submit" class="btn btn-primary btn-block">
+          <span class="btn-text">Konsolga Kirish</span>
+          <span class="btn-spinner hidden"></span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App Layout -->
+  <div class="app-layout" id="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar glass-panel">
+      <div class="sidebar-header">
+        <div class="logo-box">
+          <div class="logo-icon glow-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          </div>
+          <div>
+            <h1 class="logo-title">VAULT CORE</h1>
+            <span class="logo-subtitle">SarvarTech Enterprise</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">ASOSIY BOSHQARUV</div>
+        <button class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <span>Dashboard & Xulosa</span>
+        </button>
+
+        <button class="nav-item" data-tab="secrets" onclick="switchTab('secrets')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+          <span>Tashkilotlar & Secretlar</span>
+          <span class="nav-badge" id="badge-secrets-count">0</span>
+        </button>
+
+        <button class="nav-item" data-tab="wizard-create" onclick="switchTab('wizard-create')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+          <span>➕ Yangi Secret Qo'shish</span>
+        </button>
+
+        <div class="nav-section-label">XAVFSIZLIK & RUXSATLAR</div>
+        <button class="nav-item" data-tab="tokens" onclick="switchTab('tokens')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><line x1="12" y1="6" x2="12" y2="8"></line><line x1="12" y1="16" x2="12" y2="18"></line></svg>
+          <span>Client Tokenlar</span>
+          <span class="nav-badge" id="badge-tokens-count">0</span>
+        </button>
+
+        <button class="nav-item" data-tab="approles" onclick="switchTab('approles')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
+          <span>Mikroservis AppRole</span>
+        </button>
+
+        <button class="nav-item" data-tab="policies" onclick="switchTab('policies')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <span>ACL Policy Xavfsizlik</span>
+        </button>
+
+        <div class="nav-section-label">MONITORING & TIZIM</div>
+        <button class="nav-item" data-tab="audit" onclick="switchTab('audit')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          <span>Real-time Audit Log</span>
+        </button>
+
+        <button class="nav-item" data-tab="backup" onclick="switchTab('backup')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span>Zaxiralash (Backup)</span>
+        </button>
+
+        <button class="nav-item" data-tab="doctor" onclick="switchTab('doctor')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+          <span>Production Doctor</span>
+        </button>
+      </nav>
+
+      <!-- Sidebar Footer (Active server & Logout) -->
+      <div class="sidebar-footer">
+        <div class="server-status-pill">
+          <span class="status-indicator online"></span>
+          <div class="status-info">
+            <span class="current-server-label" id="current-server-display">https://vault-srv...</span>
+            <span class="current-user-label" id="current-user-display">root (admin)</span>
+          </div>
+        </div>
+        <button class="btn-logout" title="Chiqish" onclick="logout()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="topbar glass-panel">
+        <div class="topbar-left">
+          <h2 class="page-title" id="page-title">Dashboard</h2>
+          <span class="breadcrumb" id="page-breadcrumb">Boshqaruv / Umumiy Ko'rinish</span>
+        </div>
+
+        <div class="topbar-search" onclick="openSpotlightSearch()">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="global-search" placeholder="1000+ secretlar, tashkilot yoki kalitlarni qidirish..." readonly>
+          <span class="search-shortcut">Ctrl+K</span>
+        </div>
+
+        <div class="topbar-actions">
+          <button class="btn btn-outline btn-sm" onclick="openPwdGenModal()" title="Kriptografik kuchli parol generatsiyasi">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <span>🎲 Generator</span>
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="refreshCurrentTab()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            <span>Yangilash</span>
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="openCreateSecretModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>Yangi Secret</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Scrollable Tab Content Container -->
+      <div class="tab-viewport">
+
+        <!-- ================= TAB: DASHBOARD ================= -->
+        <section id="tab-dashboard" class="tab-pane active">
+          <!-- Stat Cards Grid -->
+          <div class="stats-grid">
+            <div class="stat-card glass-panel border-accent-blue">
+              <div class="stat-header">
+                <span class="stat-title">Jami Tashkilotlar</span>
+                <div class="stat-icon-wrapper blue">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 7v14M21 7v14M6 11h2M6 15h2M10 11h2M10 15h2M14 11h2M14 15h2M18 11h2M18 15h2M9 3h6v4H9z"></path></svg>
+                </div>
+              </div>
+              <div class="stat-value" id="stat-orgs">0</div>
+              <div class="stat-meta">Bank departamentlari & kompaniyalar</div>
+            </div>
+
+            <div class="stat-card glass-panel border-accent-emerald">
+              <div class="stat-header">
+                <span class="stat-title">Faol Servislar & Secretlar</span>
+                <div class="stat-icon-wrapper emerald">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                </div>
+              </div>
+              <div class="stat-value" id="stat-secrets">0</div>
+              <div class="stat-meta">KV-v2 Shifrlangan kalitlar</div>
+            </div>
+
+            <div class="stat-card glass-panel border-accent-purple">
+              <div class="stat-header">
+                <span class="stat-title">Faol Client Tokenlar</span>
+                <div class="stat-icon-wrapper purple">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+                </div>
+              </div>
+              <div class="stat-value" id="stat-tokens">0</div>
+              <div class="stat-meta">Dasturchilar & CI/CD tokenlari</div>
+            </div>
+
+            <div class="stat-card glass-panel border-accent-amber">
+              <div class="stat-header">
+                <span class="stat-title">Vault Status & Muhr</span>
+                <div class="stat-icon-wrapper amber">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                </div>
+              </div>
+              <div class="stat-value text-emerald" id="stat-seal">OCHIQ</div>
+              <div class="stat-meta" id="stat-version">Auto-Unseal faol</div>
+            </div>
+          </div>
+
+          <!-- Quick Action Panels & Tree Preview -->
+          <div class="dashboard-split">
+            <div class="card glass-panel flex-2">
+              <div class="card-header">
+                <h3 class="card-title">🏢 Tashkilotlar & Servislar Strukturasi</h3>
+                <button class="btn btn-sm btn-outline" onclick="switchTab('secrets')">Barchasini ko'rish →</button>
+              </div>
+              <div class="card-body">
+                <div id="dashboard-tree-container" class="tree-preview-list">
+                  <div class="skeleton-row"></div>
+                  <div class="skeleton-row"></div>
+                  <div class="skeleton-row"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card glass-panel flex-1">
+              <div class="card-header">
+                <h3 class="card-title">⚡ 1-Klikda Tezkor Amallar</h3>
+              </div>
+              <div class="card-body quick-actions-list">
+                <button class="quick-action-btn" onclick="openCreateOrgModal()">
+                  <div class="action-icon blue">➕</div>
+                  <div class="action-info">
+                    <strong>Yangi Tashkilot Qo'shish</strong>
+                    <span>Kompaniya yoki departament yaratish</span>
+                  </div>
+                </button>
+
+                <button class="quick-action-btn" onclick="openCreateSecretModal()">
+                  <div class="action-icon emerald">🔑</div>
+                  <div class="action-info">
+                    <strong>Yangi Servis & Parol Generatsiyasi</strong>
+                    <span>API, DB, Redis, Pay shablonlari bilan</span>
+                  </div>
+                </button>
+
+                <button class="quick-action-btn" onclick="openCreateTokenModal()">
+                  <div class="action-icon purple">🎟</div>
+                  <div class="action-info">
+                    <strong>Dasturchiga Token Yaratish</strong>
+                    <span>1-martalik Bootstrap (num_uses), TTL & AppRole</span>
+                  </div>
+                </button>
+
+                <button class="quick-action-btn" onclick="createInstantBackup()">
+                  <div class="action-icon amber">💾</div>
+                  <div class="action-info">
+                    <strong>1-Klik Zaxiralash (Backup)</strong>
+                    <span>Barcha ma'lumotlarni shifrlab yuklab olish</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= TAB: SECRETS EXPLORER ================= -->
+        <section id="tab-secrets" class="tab-pane">
+          <div class="secrets-explorer-layout">
+            <!-- Left Column: Organizations & Services Tree -->
+            <div class="explorer-sidebar glass-panel">
+              <div class="explorer-header">
+                <div class="flex-between">
+                  <h3 class="panel-subtitle">Tashkilotlar</h3>
+                  <button class="btn btn-xs btn-primary" onclick="openCreateOrgModal()">+ Yangi Org</button>
+                </div>
+                <div class="tree-filter">
+                  <input type="text" id="tree-search-input" placeholder="Servisni filtrlash..." oninput="filterServiceTree(this.value)">
+                </div>
+              </div>
+              <div class="explorer-tree" id="explorer-tree">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Right Column: Secret Inspector & Key/Value Editor -->
+            <div class="explorer-main glass-panel">
+              <div id="secret-empty-state" class="empty-state">
+                <div class="empty-icon">📂</div>
+                <h3>Servisni tanlang</h3>
+                <p>Chapdagi ro'yxatdan tashkilot yoki servisni tanlang, yoki yangi servis qo'shing.</p>
+                <button class="btn btn-primary" onclick="openCreateSecretModal()">+ Yangi Servis Yaratish</button>
+              </div>
+
+              <div id="secret-details-container" class="secret-details-container hidden">
+                <!-- Secret Top Bar -->
+                <div class="secret-details-header">
+                  <div class="secret-header-info">
+                    <div class="path-badge">
+                      <span class="path-icon">🔑</span>
+                      <span id="secret-display-path" class="path-text">secret/data/...</span>
+                      <button class="btn-copy-sm" onclick="copyText(document.getElementById('secret-display-path').innerText)" title="Yo'ldan nusxa olish">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                      </button>
+                    </div>
+                    <div class="secret-meta-chips" id="secret-meta-chips">
+                      <!-- Version, updated time, bound IP -->
+                    </div>
+                  </div>
+
+                  <div class="secret-header-actions">
+                    <button class="btn btn-sm btn-outline" onclick="testCurrentSecretAccess()" title="Ushbu secretni dasturchi kabi o'qib ko'rish">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                      <span>🧪 Jonli Test</span>
+                    </button>
+                    <button class="btn btn-sm btn-outline" onclick="openHandoverModalForCurrent()">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+                      <span>Dasturchiga Berish</span>
+                    </button>
+                    <button class="btn btn-sm btn-primary" onclick="saveSecretChanges()">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                      <span>O'zgarishlarni Saqlash</span>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteCurrentSecret()">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                      <span>O'chirish</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Live Test Alert Box (Hidden by default, shown when test is run) -->
+                <div id="secret-test-alert" class="test-result-box hidden animate-fade-in mb-3">
+                  <div class="flex-between">
+                    <div class="flex-row">
+                      <span id="secret-test-status-badge" class="test-badge badge-success">HTTP 200 OK</span>
+                      <strong id="secret-test-title">So'rov muvaffaqiyatli bajarildi</strong>
+                      <span id="secret-test-latency" class="text-dim text-xs">(12.4 ms)</span>
+                    </div>
+                    <button class="btn-close-sm" onclick="document.getElementById('secret-test-alert').classList.add('hidden')">&times;</button>
+                  </div>
+                  <pre id="secret-test-payload" class="code-preview-block mt-2"></pre>
+                </div>
+
+                <!-- Security & Access Policy Bar (Zero-Trust) -->
+                <div class="source-ip-banner flex-between">
+                  <div class="ip-info">
+                    <span class="ip-icon">🛡️</span>
+                    <div>
+                      <strong>Xavfsizlik Modeli:</strong>
+                      <span id="current-bound-ip-display">Zero-Trust ACL & Dynamic Bootstrap Token / AppRole</span>
+                    </div>
+                  </div>
+                  <div class="flex-row gap-2">
+                    <button type="button" class="btn btn-xs btn-outline" onclick="openTokenModalForCurrent()">🔑 Token Olish</button>
+                    <button type="button" class="btn btn-xs btn-outline" onclick="openAppRoleModalForCurrent()">🤖 AppRole Tayyorlash</button>
+                  </div>
+                </div>
+
+                <!-- View Mode Switcher Toolbar -->
+                <div class="secret-view-toolbar flex-between mb-2">
+                  <div class="btn-group">
+                    <button type="button" id="btn-view-table" class="btn btn-xs btn-outline active" onclick="switchSecretViewMode('table')">📋 Jadval Ko'rinishi</button>
+                    <button type="button" id="btn-view-raw" class="btn btn-xs btn-outline" onclick="switchSecretViewMode('raw')">{ } Raw JSON</button>
+                  </div>
+                  <div class="flex-row gap-2">
+                    <button type="button" class="btn btn-xs btn-outline" onclick="copyCurrentSecretJSON()">
+                      <span>📋 JSON Nusxalash</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Key Value Pairs Table -->
+                <div id="kv-table-container" class="kv-table-wrapper">
+                  <div class="kv-table-header">
+                    <h4>Secret Kalitlari va Qiymatlari</h4>
+                    <div class="kv-header-tools">
+                      <button class="btn btn-xs btn-outline" onclick="toggleAllPasswords()">
+                        <span id="btn-toggle-all-text">👁 Barchasini Ko'rsatish</span>
+                      </button>
+                      <button class="btn btn-xs btn-secondary" onclick="addKVRow()">
+                        ➕ Maydon Qo'shish
+                      </button>
+                    </div>
+                  </div>
+
+                  <table class="kv-table" id="kv-table">
+                    <thead>
+                      <tr>
+                        <th width="30%">Kalit (Key)</th>
+                        <th width="50%">Qiymat (Value)</th>
+                        <th width="20%">Amallar</th>
+                      </tr>
+                    </thead>
+                    <tbody id="kv-table-body">
+                      <!-- Dynamic rows -->
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Raw JSON Editor View (Hidden by default) -->
+                <div id="raw-json-container" class="raw-json-wrapper hidden">
+                  <div class="flex-between mb-2">
+                    <span class="text-xs text-dim">JSON formatida to'g'ridan-to'g'ri tahrirlashingiz yoki boshqa joydan nusxa ko'chirib qo'yishingiz mumkin:</span>
+                    <button type="button" class="btn btn-xs btn-outline" onclick="formatRawJSON()">Formatlash (Prettify)</button>
+                  </div>
+                  <textarea id="raw-json-textarea" class="code-editor" rows="14" spellcheck="false" oninput="validateRawJSON()"></textarea>
+                  <div class="flex-between mt-2">
+                    <span id="raw-json-status" class="text-xs text-emerald">✔ Format to'g'ri (Valid JSON)</span>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="saveRawJSONChanges()">JSON dan Saqlash</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= TAB: CREATE NEW SECRET ================= -->
+        <section id="tab-wizard-create" class="tab-pane">
+          <div class="wizard-container glass-panel animate-fade-in">
+            <div class="wizard-header">
+              <h2>➕ Yangi Servis & Secret Yaratish</h2>
+              <p>Tashkilot va servis nomini belgilang. Kerakli kalitlar va qiymatlarni administrator sifatida erkin kiriting.</p>
+            </div>
+
+            <form id="wizard-form" class="wizard-form" onsubmit="handleWizardSubmit(event)">
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="wz-org-select">Tashkilot (Organization)</label>
+                  <div class="flex-row">
+                    <select id="wz-org-select" class="form-control" required>
+                      <!-- populated dynamically -->
+                    </select>
+                    <button type="button" class="btn btn-outline" onclick="openCreateOrgModal()">+ Yangi Org</button>
+                  </div>
+                </div>
+
+                <div class="form-group flex-1">
+                  <label for="wz-service-name">Servis Nomi (Service Name)</label>
+                  <input type="text" id="wz-service-name" class="form-control" placeholder="masalan: billing, core-api, auth-srv" required pattern="[a-zA-Z0-9_\-\.]+" title="Faqat lotin harflari, raqamlar, tire va pastki chiziq">
+                </div>
+              </div>
+
+              <div class="source-ip-banner mb-3">
+                <div class="ip-info">
+                  <span class="ip-icon">🛡️</span>
+                  <div>
+                    <strong>Zero-Trust Tarmoq Xavfsizligi (NAT / Microservice):</strong>
+                    <div class="text-xs text-dim mt-1">
+                      Ilovalar turli tarmoq va NAT orqali ulanishi sababli, cheklovlar IP manzilga emas, 
+                      <strong>Token Use Limit (1-martalik bootstrap token)</strong>, <strong>Qisqa muddatli TTL</strong> va <strong>AppRole Dual-Key</strong> orqali boshqariladi.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Administrator Custom Key-Value Table -->
+              <div class="form-group">
+                <div class="flex-between mb-2">
+                  <div>
+                    <label>Secret Maydonlari (Kalit va Qiymatlar):</label>
+                    <span class="text-xs text-dim" style="display: block;">Administrator kerakli parametrlarni o'zi kiritadi</span>
+                  </div>
+                  <div class="flex-row gap-2">
+                    <button type="button" class="btn btn-xs btn-outline" onclick="toggleWizardValuesVisibility()">👁 Ko'rsatish/Yashirish</button>
+                    <button type="button" class="btn btn-xs btn-secondary" onclick="addWizardCustomRow()">➕ Maydon Qo'shish</button>
+                  </div>
+                </div>
+
+                <div class="kv-table-wrapper">
+                  <table class="kv-table" id="wizard-kv-table">
+                    <thead>
+                      <tr>
+                        <th width="35%">Kalit (Key)</th>
+                        <th width="45%">Qiymat (Value)</th>
+                        <th width="20%">Amallar</th>
+                      </tr>
+                    </thead>
+                    <tbody id="wizard-kv-body">
+                      <!-- Dynamic administrator-entered rows -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="wizard-footer mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                  <span>🚀 Secretni Yaratish va Shifrlash</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- ================= TAB: TOKENS ================= -->
+        <section id="tab-tokens" class="tab-pane">
+          <div class="card glass-panel">
+            <div class="card-header flex-between">
+              <div>
+                <h3 class="card-title">🎟 Client Tokenlar Boshqaruvi</h3>
+                <span class="card-subtitle">Dasturchilar va mikroservislar uchun ruxsat etilgan xavfsiz tokenlar</span>
+              </div>
+              <button class="btn btn-primary" onclick="openCreateTokenModal()">+ Yangi Token Yaratish</button>
+            </div>
+            <div class="card-body">
+              <table class="data-table" id="tokens-table">
+                <thead>
+                  <tr>
+                    <th>Display Name</th>
+                    <th>Biriktirilgan Policy</th>
+                    <th>Qolgan Muddat (TTL)</th>
+                    <th>Accessor ID</th>
+                    <th>Amallar</th>
+                  </tr>
+                </thead>
+                <tbody id="tokens-table-body">
+                  <!-- Populated via API -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= TAB: APPROLES ================= -->
+        <section id="tab-approles" class="tab-pane">
+          <div class="card glass-panel">
+            <div class="card-header flex-between">
+              <div>
+                <h3 class="card-title">🤖 Mikroservislar uchun AppRole Boshqaruvi</h3>
+                <span class="card-subtitle">Role ID & Secret ID orqali avtomatlashtirilgan kirish (Backend & CI/CD)</span>
+              </div>
+              <button class="btn btn-primary" onclick="openCreateAppRoleModal()">+ Yangi AppRole</button>
+            </div>
+            <div class="card-body">
+              <table class="data-table" id="approles-table">
+                <thead>
+                  <tr>
+                    <th>Role Nomi</th>
+                    <th>Policy</th>
+                    <th>Role ID</th>
+                    <th>Token TTL</th>
+                    <th>Amallar</th>
+                  </tr>
+                </thead>
+                <tbody id="approles-table-body">
+                  <!-- Populated via API -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= TAB: POLICIES ================= -->
+        <section id="tab-policies" class="tab-pane">
+          <div class="policies-layout">
+            <div class="policies-list-panel glass-panel">
+              <div class="panel-header flex-between">
+                <h4>Mavjud ACL Policy'lar</h4>
+                <button class="btn btn-xs btn-primary" onclick="openCreatePolicyModal()">+ Yangi Policy</button>
+              </div>
+              <div class="p-2 border-bottom-subtle">
+                <input type="text" id="policy-search-input" class="form-control" style="font-size: 0.8rem; padding: 6px 10px;" placeholder="Policy nomini filtrlash..." oninput="filterPoliciesList(this.value)">
+              </div>
+              <ul class="policy-items" id="policy-items-list">
+                <!-- dynamic -->
+              </ul>
+            </div>
+            <div class="policy-editor-panel glass-panel">
+              <div class="panel-header flex-between">
+                <div>
+                  <h4 id="policy-view-title">Policy Mazmuni</h4>
+                  <span id="policy-view-subtitle" class="text-xs text-dim">Chapdagi ro'yxatdan policy tanlang</span>
+                </div>
+                <div id="policy-actions-group" class="flex-row hidden">
+                  <button class="btn btn-sm btn-outline" id="btn-policy-toggle-edit" onclick="togglePolicyEditMode()">✏️ Tahrirlash</button>
+                  <button class="btn btn-sm btn-primary hidden" id="btn-policy-save" onclick="savePolicyChanges()">💾 Saqlash</button>
+                  <button class="btn btn-sm btn-danger" id="btn-policy-delete" onclick="deleteSelectedPolicy()">🗑 O'chirish</button>
+                </div>
+              </div>
+              <div class="policy-editor-wrapper">
+                <textarea id="policy-editor-content" class="code-editor" readonly spellcheck="false" placeholder="Chapdagi ro'yxatdan policy tanlang..."></textarea>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= TAB: AUDIT LOG ================= -->
+        <section id="tab-audit" class="tab-pane">
+          <div class="card glass-panel">
+            <div class="card-header flex-between">
+              <div>
+                <h3 class="card-title">📜 Real-time Audit & Access Monitor</h3>
+                <span class="card-subtitle">Serverga bo'lgan har bir murojaat, IP manzili va ruxsatlar tarixi</span>
+              </div>
+              <button class="btn btn-sm btn-outline" onclick="loadAuditLogs()">
+                <span>Yangilash</span>
+              </button>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="data-table audit-table" id="audit-table">
+                  <thead>
+                    <tr>
+                      <th>Vaqt (UTC)</th>
+                      <th>Client IP</th>
+                      <th>Metod</th>
+                      <th>Secret Yo'li</th>
+                      <th>Auth Identity</th>
+                      <th>Holat</th>
+                    </tr>
+                  </thead>
+                  <tbody id="audit-table-body">
+                    <!-- Dynamic -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= TAB: BACKUP ================= -->
+        <section id="tab-backup" class="tab-pane">
+          <div class="backup-grid">
+            <div class="card glass-panel">
+              <div class="card-header">
+                <h3 class="card-title">💾 1-Klik Zaxira Nusxasini Yaratish (Backup)</h3>
+                <span class="card-subtitle">Barcha tashkilotlar, servislar va parollarni shifrlangan JSON ko'rinishida yuklab oling</span>
+              </div>
+              <div class="card-body">
+                <p class="mb-4">Ushbu amal barcha KV-v2 secret ma'lumotlarini arxivlab, kompyuteringizga xavfsiz fayl sifatida saqlaydi.</p>
+                <button class="btn btn-primary btn-lg" onclick="downloadBackupFile()">
+                  <span>📥 Zaxira Faylini Yuklab Olish</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="card glass-panel">
+              <div class="card-header">
+                <h3 class="card-title">🔄 Zaxiradan Qayta Tiklash (Restore)</h3>
+                <span class="card-subtitle">Avval yuklab olingan zaxira faylidan ma'lumotlarni qayta tiklang</span>
+              </div>
+              <div class="card-body">
+                <p class="mb-4 text-warning">Diqqat! Qayta tiklash mavjud secretlarni yangilaydi yoki yetishmayotganlarini qo'shadi.</p>
+                <input type="file" id="restore-file-input" accept=".json" class="form-control mb-3">
+                <button class="btn btn-warning btn-lg" onclick="handleRestoreUpload()">
+                  <span>📤 Fayldan Qayta Tiklash</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= TAB: DOCTOR ================= -->
+        <section id="tab-doctor" class="tab-pane">
+          <div class="card glass-panel">
+            <div class="card-header flex-between">
+              <div>
+                <h3 class="card-title">🩺 Production Doctor Diagnostikasi</h3>
+                <span class="card-subtitle">Tizim holati, auto-unseal xizmati va tarmoq parametrlarini tekshirish</span>
+              </div>
+              <button class="btn btn-sm btn-outline" onclick="runProductionDoctor()">Qayta Tekshirish</button>
+            </div>
+            <div class="card-body">
+              <div class="doctor-checks-list" id="doctor-checks-list">
+                <!-- Populated via API -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- 1. Handover Card Modal (Dasturchiga beriladigan tayyor blok) -->
+  <div id="modal-handover" class="modal-overlay hidden">
+    <div class="modal-card modal-lg glass-panel animate-scale-up">
+      <div class="modal-header">
+        <div class="flex-row">
+          <span class="modal-icon emerald">🏷️</span>
+          <div>
+            <h3>Dasturchiga Beriladigan Blok</h3>
+            <span class="modal-subtitle">Shu ma'lumotlarni ko'chirib (Copy) dasturchiga yuborasiz</span>
+          </div>
+        </div>
+        <button class="btn-close" onclick="closeModal('modal-handover')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="handover-box" id="handover-box">
+          <div class="handover-field">
+            <label>Server manzili (URL):</label>
+            <div class="copy-input-group">
+              <input type="text" id="handover-url" readonly>
+              <button class="btn-copy" onclick="copyInput('handover-url')">Copy</button>
+            </div>
+          </div>
+
+          <div class="handover-field" id="handover-token-field">
+            <label>Client Token:</label>
+            <div class="copy-input-group">
+              <input type="text" id="handover-token" readonly>
+              <button class="btn-copy" onclick="copyInput('handover-token')">Copy</button>
+            </div>
+          </div>
+
+          <div class="handover-field hidden" id="handover-role-field">
+            <label>Role ID:</label>
+            <div class="copy-input-group">
+              <input type="text" id="handover-role-id" readonly>
+              <button class="btn-copy" onclick="copyInput('handover-role-id')">Copy</button>
+            </div>
+          </div>
+
+          <div class="handover-field hidden" id="handover-secret-id-field">
+            <label>Secret ID:</label>
+            <div class="copy-input-group">
+              <input type="text" id="handover-secret-id" readonly>
+              <button class="btn-copy" onclick="copyInput('handover-secret-id')">Copy</button>
+            </div>
+          </div>
+
+          <div class="handover-field">
+            <label>Secret Yo'li:</label>
+            <div class="copy-input-group">
+              <input type="text" id="handover-path" readonly>
+              <button class="btn-copy" onclick="copyInput('handover-path')">Copy</button>
+            </div>
+          </div>
+
+          <!-- Multi-language Code Generator Tabs -->
+          <div class="handover-field mt-3">
+            <div class="flex-between mb-2">
+              <label>Dasturchi uchun integratsiya kodi:</label>
+              <div class="lang-tabs" id="handover-lang-tabs">
+                <button type="button" class="lang-tab-btn active" onclick="switchHandoverLang('env')">⚡ .env</button>
+                <button type="button" class="lang-tab-btn" onclick="switchHandoverLang('curl')">💻 cURL</button>
+                <button type="button" class="lang-tab-btn" onclick="switchHandoverLang('python')">🐍 Python</button>
+                <button type="button" class="lang-tab-btn" onclick="switchHandoverLang('node')">🟢 Node.js</button>
+                <button type="button" class="lang-tab-btn" onclick="switchHandoverLang('go')">🔵 Go</button>
+                <button type="button" class="lang-tab-btn" onclick="switchHandoverLang('php')">🐘 PHP</button>
+              </div>
+            </div>
+            <div class="code-box-wrapper">
+              <pre class="code-preview-block" id="handover-code-display"></pre>
+              <button class="btn-copy-code" onclick="copyCurrentHandoverCode()" title="Kodni nusxalash">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span>Nusxa olish</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Connection Tester inside Handover -->
+          <div class="handover-tester-card mt-3">
+            <div class="flex-between">
+              <div>
+                <strong>🧪 Haqiqiy Dasturchi So'rovini Test Qilish</strong>
+                <p class="text-xs text-dim">Berilayotgan token orqali Vault'dan secret o'qilishini hoziroq sinab ko'ring</p>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline" id="btn-test-handover" onclick="runHandoverLiveTest()">
+                <span>Sinash (Test Request)</span>
+              </button>
+            </div>
+            <div id="handover-test-result" class="test-result-box hidden mt-2 animate-fade-in">
+              <div class="flex-between">
+                <span id="handover-test-badge" class="test-badge badge-success">HTTP 200 OK</span>
+                <span id="handover-test-latency" class="text-xs text-dim"></span>
+              </div>
+              <pre id="handover-test-preview" class="code-preview-block mt-2"></pre>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modal-handover')">Yopish</button>
+        <button class="btn btn-primary" onclick="copyEntireHandover()">
+          <span>📋 Barcha Ma'lumotlarni Nusxalash</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Create Organization Modal -->
+  <div id="modal-create-org" class="modal-overlay hidden">
+    <div class="modal-card glass-panel animate-scale-up">
+      <div class="modal-header">
+        <h3>🏢 Yangi Tashkilot Qo'shish</h3>
+        <button class="btn-close" onclick="closeModal('modal-create-org')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-create-org" onsubmit="handleCreateOrgSubmit(event)">
+          <div class="form-group">
+            <label for="new-org-name">Tashkilot / Kompaniya Nomi</label>
+            <input type="text" id="new-org-name" class="form-control" placeholder="masalan: aloqabank, uzcard, payme" required pattern="[a-zA-Z0-9_-]+" title="Faqat lotin harflari va raqamlar">
+          </div>
+          <div class="form-group">
+            <label for="new-org-init-service">Boshlang'ich Servis Nomi</label>
+            <input type="text" id="new-org-init-service" class="form-control" placeholder="core-api" value="core-api">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-create-org')">Bekor qilish</button>
+            <button type="submit" class="btn btn-primary">Tashkilotni Yaratish</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Create Token Modal -->
+  <div id="modal-create-token" class="modal-overlay hidden">
+    <div class="modal-card modal-md glass-panel animate-scale-up">
+      <div class="modal-header">
+        <h3>🎟 Yangi Client Token Yaratish</h3>
+        <button class="btn-close" onclick="closeModal('modal-create-token')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-create-token" onsubmit="handleCreateTokenSubmit(event)">
+          <div class="form-group">
+            <label for="tok-target-org">Tashkilot</label>
+            <select id="tok-target-org" class="form-control" onchange="populateTokenServices(this.value)" required>
+              <!-- dynamic -->
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="tok-target-service">Servis</label>
+            <select id="tok-target-service" class="form-control" required>
+              <!-- dynamic -->
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Ruxsat Darajasi</label>
+            <select id="tok-access-level" class="form-control">
+              <option value="ro">👁 Read-Only (Faqat o'qish - Monitoring/Audit)</option>
+              <option value="rw" selected>✍️ Read-Write (O'qish va yozish - Ilova/Microservice)</option>
+              <option value="admin">👑 Tashkilot Admin (Butun tashkilotni boshqarish)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Amal qilish muddati (TTL)</label>
+            <select id="tok-ttl" class="form-control">
+              <option value="24h">24 soat (24h) - Test / CI-CD</option>
+              <option value="720h" selected>30 kun (720h) - Standart Microservice</option>
+              <option value="8760h">1 yil (8760h) - Doimiy xizmat</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="tok-num-uses">Foydalanish Limiti (num_uses)</label>
+              <select id="tok-num-uses" class="form-control">
+                <option value="1" selected>⚡ 1 marta (Bootstrap - ilova o'qishi bilan token kuyadi)</option>
+                <option value="0">♾️ Cheksiz (TTL muddati davomida)</option>
+                <option value="5">🔄 5 marta (Container klasteri uchun)</option>
+                <option value="10">🔄 10 marta</option>
+              </select>
+              <small class="text-dim">NAT va dinamik muhitda 1-martalik token eng xavfsiz hisoblanadi</small>
+            </div>
+
+            <div class="form-group flex-1">
+              <label for="tok-wrapping">Response Wrapping (Cubbyhole)</label>
+              <select id="tok-wrapping" class="form-control">
+                <option value="" selected>Oddiy Token (To'g'ridan-to'g'ri)</option>
+                <option value="10m">🎁 10 daqiqa Wrapped (1 marta ochiluvchi qadoq)</option>
+                <option value="1h">🎁 1 soat Wrapped</option>
+              </select>
+              <small class="text-dim">Tranzit paytida o'g'irlansa darhol ma'lum bo'ladi</small>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="tok-renewable" checked>
+              <span>Token muddatini uzaytirish mumkin (Renewable)</span>
+            </label>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-create-token')">Bekor qilish</button>
+            <button type="submit" class="btn btn-primary">Token Yaratish</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Create AppRole Modal -->
+  <div id="modal-create-approle" class="modal-overlay hidden">
+    <div class="modal-card modal-md glass-panel animate-scale-up">
+      <div class="modal-header">
+        <h3>🤖 Yangi AppRole Yaratish</h3>
+        <button class="btn-close" onclick="closeModal('modal-create-approle')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-create-approle" onsubmit="handleCreateAppRoleSubmit(event)">
+          <div class="form-group">
+            <label for="approle-org">Tashkilot</label>
+            <select id="approle-org" class="form-control" onchange="populateAppRoleServices(this.value)" required></select>
+          </div>
+          <div class="form-group">
+            <label for="approle-service">Servis</label>
+            <select id="approle-service" class="form-control" required></select>
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="approle-secret-id-num-uses">Secret ID Limiti (num_uses)</label>
+              <select id="approle-secret-id-num-uses" class="form-control">
+                <option value="1" selected>⚡ 1 marta (Single-use Secret-ID - CI/CD tavsiya etiladi)</option>
+                <option value="0">♾️ Cheksiz (Doimiy xizmat)</option>
+                <option value="5">🔄 5 marta</option>
+              </select>
+            </div>
+
+            <div class="form-group flex-1">
+              <label for="approle-secret-id-ttl">Secret ID Muddati (TTL)</label>
+              <select id="approle-secret-id-ttl" class="form-control">
+                <option value="10m">10 daqiqa (Tezkor deploy)</option>
+                <option value="1h">1 soat</option>
+                <option value="24h" selected>24 soat (Standart)</option>
+                <option value="720h">30 kun (Uzoq muddatli)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="approle-token-ttl">Generatsiya Token TTL</label>
+              <select id="approle-token-ttl" class="form-control">
+                <option value="1h">1 soat</option>
+                <option value="24h" selected>24 soat (Standart)</option>
+                <option value="720h">30 kun</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label for="approle-token-max-ttl">Maksimal Token TTL (Max TTL)</label>
+              <select id="approle-token-max-ttl" class="form-control">
+                <option value="24h">24 soat</option>
+                <option value="720h" selected>30 kun (Maksimal)</option>
+                <option value="8760h">1 yil</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-create-approle')">Bekor qilish</button>
+            <button type="submit" class="btn btn-primary">AppRole Tayyorlash</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Password Generator Modal -->
+  <div id="modal-pwd-generator" class="modal-overlay hidden">
+    <div class="modal-card modal-md glass-panel animate-scale-up">
+      <div class="modal-header">
+        <div class="flex-row">
+          <span class="modal-icon blue">🎲</span>
+          <div>
+            <h3>Kriptografik Parol Generatori</h3>
+            <span class="modal-subtitle">Bank xavfsizlik talablariga mos yuqori entropiyali parollar</span>
+          </div>
+        </div>
+        <button class="btn-close" onclick="closeModal('modal-pwd-generator')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="pwd-output-box mb-3">
+          <input type="text" id="gen-pwd-output" class="pwd-display-input" readonly>
+          <button type="button" class="btn btn-primary btn-copy" onclick="copyInput('gen-pwd-output')">Nusxa olish</button>
+        </div>
+
+        <div class="strength-meter mb-3">
+          <div class="strength-bar"><div id="gen-strength-fill" class="strength-fill strength-strong"></div></div>
+          <div class="flex-between mt-1">
+            <span class="text-xs text-dim">Xavfsizlik darajasi:</span>
+            <span id="gen-strength-label" class="text-xs font-bold text-emerald">Juda Kuchli (Kriptografik)</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="flex-between">
+            <label for="gen-pwd-length">Parol uzunligi: <strong id="gen-len-label" class="text-white">24 belgi</strong></label>
+          </div>
+          <input type="range" id="gen-pwd-length" min="12" max="64" value="24" class="slider-control" oninput="updatePwdGenLength(this.value)">
+        </div>
+
+        <div class="checkbox-grid mb-3">
+          <label class="checkbox-label"><input type="checkbox" id="gen-opt-upper" checked onchange="regenerateCustomPassword()"> <span>Katta harflar (A-Z)</span></label>
+          <label class="checkbox-label"><input type="checkbox" id="gen-opt-lower" checked onchange="regenerateCustomPassword()"> <span>Kichik harflar (a-z)</span></label>
+          <label class="checkbox-label"><input type="checkbox" id="gen-opt-digits" checked onchange="regenerateCustomPassword()"> <span>Raqamlar (0-9)</span></label>
+          <label class="checkbox-label"><input type="checkbox" id="gen-opt-symbols" checked onchange="regenerateCustomPassword()"> <span>Maxsus belgilar (!@#$%^&*)</span></label>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-pwd-generator')">Yopish</button>
+          <button type="button" class="btn btn-primary" onclick="regenerateCustomPassword()">🎲 Yangi Generatsiya</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Spotlight Command Palette / Search Modal (Ctrl+K) -->
+  <div id="modal-spotlight-search" class="spotlight-overlay hidden" onclick="handleSpotlightBackdrop(event)">
+    <div class="spotlight-card glass-panel animate-scale-up" onclick="event.stopPropagation()">
+      <div class="spotlight-input-wrap">
+        <svg class="spotlight-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="spotlight-input" placeholder="Tashkilot, servis, token yoki amalni qidiring..." oninput="handleSpotlightInput(this.value)" autocomplete="off">
+        <span class="spotlight-badge">ESC yopish</span>
+      </div>
+      <div id="spotlight-results" class="spotlight-results">
+        <!-- Results rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Create ACL Policy Modal -->
+  <div id="modal-create-policy" class="modal-overlay hidden">
+    <div class="modal-card modal-lg glass-panel animate-scale-up">
+      <div class="modal-header">
+        <div class="flex-row">
+          <span class="modal-icon purple">🛡️</span>
+          <div>
+            <h3>Yangi ACL Xavfsizlik Policy Yaratish</h3>
+            <span class="modal-subtitle">HCL formatidagi qoidalar orqali aniq yo'llarga ruxsat berish</span>
+          </div>
+        </div>
+        <button class="btn-close" onclick="closeModal('modal-create-policy')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-create-policy" onsubmit="handleCreatePolicySubmit(event)">
+          <div class="form-group">
+            <label for="new-policy-name">Policy Nomi</label>
+            <input type="text" id="new-policy-name" class="form-control" placeholder="masalan: policy-humo-billing-ro" required pattern="[a-zA-Z0-9_\-\.]+" title="Faqat harflar, raqamlar, tire va nuqta">
+          </div>
+
+          <div class="form-group">
+            <div class="flex-between mb-2">
+              <label>Tayyor Shablonni Tanlang:</label>
+              <div class="btn-group">
+                <button type="button" class="btn btn-xs" onclick="applyPolicyTemplate('ro')">👁 Faqat O'qish (RO)</button>
+                <button type="button" class="btn btn-xs" onclick="applyPolicyTemplate('rw')">✍️ O'qish va Yozish (RW)</button>
+                <button type="button" class="btn btn-xs" onclick="applyPolicyTemplate('admin')">👑 Tashkilot Admin</button>
+              </div>
+            </div>
+            <textarea id="new-policy-content" class="code-editor" rows="10" spellcheck="false" required placeholder='path "secret/data/myorg/*" { capabilities = ["read"] }'></textarea>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-create-policy')">Bekor qilish</button>
+            <button type="submit" class="btn btn-primary">Policy'ni Saqlash</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
