@@ -19,6 +19,7 @@
 7. [SarvarTech Infratuzilmasi: Maxsus Ishlab Chiqilgan Boshqaruv Asboblari](#7-sarvartech-infratuzilmasi-asboblari)
 8. [Administratorning 5 Ta Qat'iy Taqiqlangan Xatosi](#8-administratorning-5-ta-taqiqlangan-xatosi)
 9. [Xulosa va Keyingi Qadamlar](#9-xulosa)
+10. ⚡ **[Vault CRUD & Operator Cheat Sheet (Alohida Sahifa)](VAULT_CRUD_CHEATSHEET.md)**
 
 ---
 
