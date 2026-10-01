@@ -15,7 +15,7 @@
 
 ## 2. Vault'dan Oldin Maxfiy Ma'lumotlar Qanday Saqlangan?
 
-Vault paydo bo'lishidan oldin sirlarni saqlashda quyidagi "eski maktab" usullaridan foydalanilgan:
+Vault paydo bo'lishidan oldin maxfiy parollarni (secrets) saqlashda quyidagi "eski maktab" usullaridan foydalanilgan:
 
 1. **Hardcoded Secrets (Kod ichiga yozib ketish) ❌:**
    * Dasturchilar parollarni to'g'ridan-to'g'ri kod ichiga (`const DB_PASS = "pass123"`) yozib ketishgan. Kod Git/GitHub'ga chiqib ketsa, loyiha butunlay fosh bo'lgan.
