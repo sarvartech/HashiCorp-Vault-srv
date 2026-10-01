@@ -13,8 +13,11 @@ ENV/
 .env
 *.pem
 *.key
-*.crt
 vault_credentials.txt
+vault_credentials.json
+approle_credentials.json
+devops_access_info.json
+vault_keys.txt
 /vault_backups/
 *.snap
 

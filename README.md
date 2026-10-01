@@ -9,6 +9,20 @@
 
 ---
 
+## 🎓 7 KUNDA MASTERING HASHICORP VAULT (KURS REJASI)
+
+| Kun | Mavzu | Nazariya (Ma'ruza) | Amaliyot (Lab Guide) |
+| :---: | :--- | :--- | :--- |
+| **Day 1** | **Vault Arxitekturasi, Barrier va Shamir Unseal** | 📖 [day-01/LECTURE.md](day-01/LECTURE.md) | 🛠️ [day-01/LAB_GUIDE.md](day-01/LAB_GUIDE.md) |
+| **Day 2** | **KV-v2 Secrets Engine, Versiyalash va REST API** | 📖 [day-02/LECTURE.md](day-02/LECTURE.md) | 🛠️ [day-02/LAB_GUIDE.md](day-02/LAB_GUIDE.md) |
+| **Day 3** | **Dinamik Sirlar (Database Engine & Leases)** | 📖 [day-03/LECTURE.md](day-03/LECTURE.md) | 🛠️ [day-03/LAB_GUIDE.md](day-03/LAB_GUIDE.md) |
+| **Day 4** | **Autentifikatsiya (AppRole) & HCL Policies** | 📖 [day-04/LECTURE.md](day-04/LECTURE.md) | 🛠️ [day-04/LAB_GUIDE.md](day-04/LAB_GUIDE.md) |
+| **Day 5** | **PKI Secrets Engine & Ichki Sertifikatlar (mTLS)** | 📖 [day-05/LECTURE.md](day-05/LECTURE.md) | 🛠️ [day-05/LAB_GUIDE.md](day-05/LAB_GUIDE.md) |
+| **Day 6** | **Transit Engine (Encryption-as-a-Service - EaaS)** | 📖 [day-06/LECTURE.md](day-06/LECTURE.md) | 🛠️ [day-06/LAB_GUIDE.md](day-06/LAB_GUIDE.md) |
+| **Day 7** | **Production Hardening, Raft HA va Snapshot DR** | 📖 [day-07/LECTURE.md](day-07/LECTURE.md) | 🛠️ [day-07/LAB_GUIDE.md](day-07/LAB_GUIDE.md) |
+
+---
+
 ## 📑 MUNDARIJA (TABLE OF CONTENTS)
 1. [Kirish: Nega Zamonaviy Dunyoga Vault Kerak? (Secret Sprawl Muammosi)](#1-kirish-nega-zamonaviy-dunyoga-vault-kerak)
 2. [Vault Qanday Ishlaydi? Asosiy Ishlash Prinsipi va Topologiyasi](#2-vault-qanday-ishlaydi-asosiy-ishlash-prinsipi)
