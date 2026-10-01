@@ -1,9 +1,31 @@
 # 📚 DAY 2: MA'RUZA MATNI
-## Key-Value (KV) Secrets Engine: Versiyalash, Metadata va REST API
+## Key-Value (KV) Secrets Engine: Versiyalash, Unseal Hayot Sikli va REST API
 
 ---
 
-### 1. Secret Engines Kontseptsiyasi
+### 1. Qayta Ishga Tushishdagi Xavfsizlik: Sealed, Shamir Unseal va Auto-Unseal Hayot Sikli
+
+Vault serveri o‘chib-yonganda xavfsizlik nuqtai nazaridan avtomatik ravishda qulflangan (**Sealed**) holatga o‘tadi.
+
+* Ushbu holatda barcha maxfiy ma’lumotlar diskda **AES-256** shifri ostida qoladi va ularni ochuvchi **Master Key** xotiradan (RAM) butunlay o‘chib ketadi.
+* Agar tizim standart **Shamir’s Secret Sharing** rejimida sozlangan bo‘lsa, serverni qayta ishga tushirish uchun inson aralashuvi shart bo‘ladi.
+* Bunda oldindan belgilangan bir nechta mas’ul administratorlar (masalan, 5 kishidan kamida 3 tasi) o‘zlaridagi maxsus unseal kalit bo‘laklarini CLI yoki Web UI orqali kiritishlari talab etiladi.
+* Kiritilgan qismlar yetarli miqdorga (**Threshold**) yetgan zahoti, Shamir algoritmi xotirada Master Key’ni qayta tiklaydi.
+* Tiklagan Master Key yordamida esa shifrlash kalitlari (Encryption Keys) ochilib, Vault yana faol (**Active**) rejimga o‘tadi va so‘rovlarni qabul qila boshlaydi.
+
+#### ⚡ Nima Uchun Ishlab Chiqarishda Auto-Unseal Kerak?
+
+Biroq, tun o‘rtasidagi to‘satdan rebootlar paytida tizim to‘xtab qolmasligi uchun yirik loyihalarda **Auto-unseal** mexanizmi yoqiladi:
+
+1. **Tashqi KMS / Transit:** Vault o‘zining shifrlash kalitini tashqi xavfsiz tizimga — masalan, bulutli **KMS** (AWS KMS, Azure Key Vault, Google Cloud KMS) yoki mahalliy **HSM / Transit Vault** servisiga ishonib topshiradi.
+2. **Inson omilisiz zudlik bilan ochilish:** Server qayta yonganida inson omili talab qilinmaydi; Vault o‘sha tashqi servis bilan darhol xavfsiz API orqali bog‘lanadi.
+3. **Natija:** Tashqi servis kalitni tasdiqlab berishi bilan Vault bir necha soniya ichida o‘z-o‘zini qulfdan chiqarib, ilovalarga xizmat ko‘rsatishda davom etadi.
+
+> **Xulosa:** Kichik laboratoriyalarda qo‘lda ochiladigan bu qat’iy xavfsizlik jarayoni professional ishlab chiqarishda to‘liq avtomatlashtirilgan barqaror tizimga aylanadi.
+
+---
+
+### 2. Secret Engines Kontseptsiyasi
 
 Vault'da barcha ma'lumotlar **Secret Engine**lar orqali boshqariladi.
 Har bir Secret Engine ma'lum bir URL yo'liga (path) ulanadi (mount qilinadi):
@@ -15,7 +37,7 @@ Vault'ning go'zalligi shundaki, siz bitta turdagi engine'ni bir nechta turli yo'
 
 ---
 
-### 2. KV Version 1 va KV Version 2 Farqi
+### 3. KV Version 1 va KV Version 2 Farqi
 
 Key-Value (KV) Vault'dagi eng ko'p ishlatiladigan engine hisoblanadi. Uning 2 ta versiyasi mavjud:
 
@@ -29,7 +51,7 @@ Key-Value (KV) Vault'dagi eng ko'p ishlatiladigan engine hisoblanadi. Uning 2 ta
 
 ---
 
-### 3. KV-v2 Ma'lumotlar Modeli
+### 4. KV-v2 Ma'lumotlar Modeli
 
 KV-v2 da har bir sir 2 qismdan iborat:
 
@@ -55,7 +77,7 @@ KV-v2 da har bir sir 2 qismdan iborat:
 
 ---
 
-### 4. REST API Bilan Bog'lanish Arxitekturasi
+### 5. REST API Bilan Bog'lanish Arxitekturasi
 
 CLI'dagi barcha buyruqlar aslida orqa fonda oddiy HTTP REST so'rovlarini yuboradi:
 * `GET /v1/secret/data/my-secret` — Sirni o'qish
