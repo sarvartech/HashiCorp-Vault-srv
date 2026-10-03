@@ -105,7 +105,83 @@ VAULT_TOKEN=$APP_TOKEN vault kv get secret/payments/stripe
 
 ---
 
-### 🎯 Day 4 Mini-Topshiriq:
-1. `userpass` autentifikatsiyasini yoqing: `vault auth enable userpass`.
-2. `junior_dev` foydalanuvchisini yarating: `vault write auth/userpass/users/junior_dev password="Pass123!" policies="backend-app-policy"`.
-3. CLI orqali o'sha foydalanuvchi nomidan kiring: `vault login -method=userpass username=junior_dev`.
+### 6-Qadam: Superadmin Policy va Yangi Admin User Yaratish
+
+Root tokenni xavfsiz bekor qilishdan oldin, barcha ma'muriy huquqlarga ega shaxsiy Admin foydalanuvchisi ochilishi shart.
+
+```bash
+# 1. Admin siyosati faylini yaratamiz
+cat << 'EOF' > admin-policy.hcl
+# Vault'dagi barcha yo'llarga to'liq kirish va boshqaruv (sudo) huquqi
+path "*" {
+  capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+}
+EOF
+
+# 2. Siyosatni Vault'ga yuklaymiz
+vault policy write admin admin-policy.hcl
+
+# 3. Userpass autentifikatsiyasini yoqamiz (agar oldin yoqilmagan bo'lsa)
+vault auth enable userpass
+
+# 4. Yangi shaxsiy Admin foydalanuvchi yaratamiz
+vault write auth/userpass/users/sarvar_admin \
+    password="AdminStrongPassword2026!" \
+    policies="admin"
+```
+
+---
+
+### 7-Qadam: Yangi Admin Bilan Login Qilish va Huquqlarni Sinash
+
+Hech qachon yangi admin hisobini tekshirib ko'rmasdan eski tokenlarni o'chirmang:
+
+```bash
+# Yangi admin bilan login qilamiz
+vault login -method=userpass username=sarvar_admin
+# Parolni kiriting: AdminStrongPassword2026!
+
+# Token ma'lumotlarini tekshiramiz
+vault token lookup
+```
+✅ Siz `policies: [admin default]` ga ega yangi faol tokenga ega bo'lasiz.
+
+---
+
+### 8-Qadam: Foydalanuvchilarni Boshqarish va O'chirish (Remove User)
+
+Keling, oddiy dasturchi hisobini ochib, so'ng uni tizimdan o'chirishni (Offboarding) bajaramiz:
+
+```bash
+# 1. Sinov uchun yangi user yaratamiz
+vault write auth/userpass/users/test_dev \
+    password="TempPassword123!" \
+    policies="backend-app-policy"
+
+# 2. Mavjud barcha foydalanuvchilar ro'yxatini ko'ramiz
+vault list auth/userpass/users
+
+# 3. Foydalanuvchi ma'lumotlarini o'qish (qaysi siyosatlar biriktirilgan)
+vault read auth/userpass/users/test_dev
+
+# 4. Foydalanuvchining parolini yoki siyosatini yangilash (Update)
+vault write auth/userpass/users/test_dev \
+    password="NewSuperPassword2026!" \
+    policies="backend-app-policy,default"
+
+# 5. Foydalanuvchini tizimdan butunlay O'CHIRISH (Remove / Delete)
+vault delete auth/userpass/users/test_dev
+
+# 6. O'chirilganini tekshirish
+vault list auth/userpass/users
+```
+> [!IMPORTANT]
+> `vault delete auth/userpass/users/<username>` buyrug'i foydalanuvchining yangi login qilishini darhol to'xtatadi. Agar uning oldin olingan faol tokeni qolgan bo'lsa, uni `vault token revoke -accessor <ACCESSOR_ID>` orqali bekor qilasiz.
+
+---
+
+### 🎯 Day 4 Topshiriq:
+1. O'zingiz uchun shaxsiy `ism_admin` nomli foydalanuvchi yarating va unga `admin` siyosatini bering.
+2. Yangi yaratilgan admingiz bilan login qilib, tizim holatini (`vault status`) tekshiring.
+3. Soxta `fired_employee` foydalanuvchisini yarating va uni `vault delete` buyrug'i bilan o'chirib tashlang.
+

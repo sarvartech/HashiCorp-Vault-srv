@@ -81,3 +81,22 @@ path "secret/data/security/*" {
   capabilities = ["deny"]
 }
 ```
+
+---
+
+### 4. Foydalanuvchilarni Boshqarish (User Management & Lifecycle)
+
+Vault'da inson muhandislari uchun alohida shaxsiy hisoblar ochish xavfsizlikning eng birinchi talabi hisoblanadi.
+
+#### Nima uchun umumiy Root Token ishlatilmasligi kerak?
+1. **Shaxsiy javobgarlik (Audit Trail):** Agar hamma Root token ishlatsa, audit loglarida kim qaysi parolni o'zgartirganini yoki o'chirganini bilib bo'lmaydi.
+2. **Eng kam imtiyoz printsipi (Least Privilege):** Har bir xodimga faqat o'ziga kerakli hududga ruxsat beriladi.
+3. **Hisobni o'chirish (Offboarding):** Xodim ishdan ketganda, uning hisobi darhol o'chiriladi va barcha faol tokenlari bekor qilinadi.
+
+#### Foydalanuvchi Hayot Sikli (User Lifecycle):
+* **Yangi user / admin yaratish:** `vault write auth/userpass/users/<username> password="..." policies="..."`
+* **Ro'yxatni ko'rish (List):** `vault list auth/userpass/users`
+* **Parolni yoki siyosatni yangilash (Update):** Yangi parametrlar bilan qayta `write` qilinadi.
+* **Foydalanuvchini o'chirish (Remove / Delete):** `vault delete auth/userpass/users/<username>`
+* **Tokenlarini bekor qilish (Revoke):** O'chirilgach, uning ilgari olgan va hali eskirib ulgurmagan faol tokenlari ham `vault token revoke -accessor` orqali bekor qilinadi.
+

@@ -9,8 +9,9 @@
 2. [Vault Buyruqlar Sintaksisining To'liq Anatomiyasi (PUT, GET, INPUT, LIST, OVERVIEW)](#2-vault-buyruqlar-sintaksisining-toliq-anatomiyasi-put-get-input-list-overview)
 3. [ACL Policies (Xavfsizlik Siyosati) CRUD](#3-acl-policies-crud)
 4. [AppRole & Secret-ID (Mikroservislar) CRUD](#4-approle--secret-id-crud)
-5. [Unseal, Seal, Tokenlar & Accessor Boshqaruvi](#5-unseal-seal-tokenlar--accessor-boshqaruvi)
-6. [Ekspress Qidiruv: Eng Ko'p Ishlatiladigan 10 Ta Buyruq](#6-eng-kop-ishlatiladigan-10-ta-buyruq)
+5. [Foydalanuvchilar (Userpass & Admin) CRUD Boshqaruvi](#5-foydalanuvchilar-userpass--admin-crud-boshqaruvi)
+6. [Unseal, Seal, Tokenlar & Accessor Boshqaruvi](#6-unseal-seal-tokenlar--accessor-boshqaruvi)
+7. [Ekspress Qidiruv: Eng Ko'p Ishlatiladigan 10 Ta Buyruq](#7-eng-kop-ishlatiladigan-10-ta-buyruq)
 
 ---
 
@@ -194,7 +195,25 @@ vault list auth/approle/role/
 
 ---
 
-## 5. UNSEAL, SEAL, TOKENLAR & ACCESSOR BOSHQARUVI
+## 5. FOYDALANUVCHILAR (USERPASS & ADMIN) CRUD BOSHQARUVI
+
+> Inson muhandislari va administratorlar hisoblarini boshqarish, yangi user qo'shish va ularni o'chirish (offboarding).
+
+| Amal | CLI Buyrug'i | REST API (cURL) | Izoh / Natija |
+| :--- | :--- | :--- | :--- |
+| **AUTH ENABLE (Userpass yoqish)** | `vault auth enable userpass` | `curl -X POST -H "X-Vault-Token: $TOKEN" -d '{"type": "userpass"}' https://vault-srv.sarvartech.uz/v1/sys/auth/userpass` | Userpass autentifikatsiya tizimini yoqadi. |
+| **CREATE ADMIN USER** | `vault write auth/userpass/users/sarvar_admin password="StrongPassword2026!" policies="admin"` | `curl -X POST -H "X-Vault-Token: $TOKEN" -d '{"password": "StrongPassword2026!", "policies": "admin"}' https://vault-srv.sarvartech.uz/v1/auth/userpass/users/sarvar_admin` | **To'liq admin huquqli shaxsiy hisob** ochadi. |
+| **CREATE DEV USER** | `vault write auth/userpass/users/junior_dev password="DevPass123!" policies="dev-policy"` | `curl -X POST -H "X-Vault-Token: $TOKEN" -d '{"password": "DevPass123!", "policies": "dev-policy"}' https://vault-srv.sarvartech.uz/v1/auth/userpass/users/junior_dev` | Faqat o'ziga ajratilgan siyosatga ega dasturchi hisobini ochadi. |
+| **READ USER (Ma'lumotlarini ko'rish)** | `vault read auth/userpass/users/sarvar_admin` | `curl -H "X-Vault-Token: $TOKEN" https://vault-srv.sarvartech.uz/v1/auth/userpass/users/sarvar_admin \| jq .data` | Userning siyosatlari, token TTL va parametrlarini ko'rsatadi. |
+| **LIST USERS (Userlar ro'yxati)** | `vault list auth/userpass/users` | `curl -X LIST -H "X-Vault-Token: $TOKEN" https://vault-srv.sarvartech.uz/v1/auth/userpass/users` | Tizimdagi barcha faol inson hisoblari (username) ro'yxatini chiqaradi. |
+| **UPDATE PASSWORD (Parolni yangilash)** | `vault write auth/userpass/users/sarvar_admin/password password="NewSecretPass2026!"` | `curl -X POST -H "X-Vault-Token: $TOKEN" -d '{"password": "NewSecretPass2026!"}' https://vault-srv.sarvartech.uz/v1/auth/userpass/users/sarvar_admin/password` | Mavjud userning parolini zudlik bilan almashtiradi. |
+| **UPDATE POLICIES (Siyosatni o'zgartirish)** | `vault write auth/userpass/users/junior_dev policies="dev-policy,qa-policy"` | `curl -X POST -H "X-Vault-Token: $TOKEN" -d '{"policies": "dev-policy,qa-policy"}' https://vault-srv.sarvartech.uz/v1/auth/userpass/users/junior_dev` | Userning vakolatlarini kengaytiradi yoki qisqartiradi. |
+| **DELETE / REMOVE USER (Userni o'chirish)** | `vault delete auth/userpass/users/junior_dev` | `curl -X DELETE -H "X-Vault-Token: $TOKEN" https://vault-srv.sarvartech.uz/v1/auth/userpass/users/junior_dev` | **Userni tizimdan butunlay o'chiradi (Offboarding).** U endi login qila olmaydi. |
+| **LOGIN AS USER (User sifatida kirish)** | `vault login -method=userpass username=sarvar_admin` | `curl -X POST -d '{"password": "StrongPassword2026!"}' https://vault-srv.sarvartech.uz/v1/auth/userpass/login/sarvar_admin \| jq -r .auth.client_token` | User o'z login va paroli bilan yangi faol token oladi. |
+
+---
+
+## 6. UNSEAL, SEAL, TOKENLAR & ACCESSOR BOSHQARUVI
 
 > Server holati, shifrlash to'sig'i va foydalanuvchilar sessiyalari.
 

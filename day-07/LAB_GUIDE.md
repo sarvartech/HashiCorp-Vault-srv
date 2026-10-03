@@ -90,12 +90,33 @@ vault kv get secret/production/database
 
 ### 6-Qadam: Root Tokendan Xalos Bo'lish (Root Token Revoke)
 
-Barcha sozlashlar (AppRole, Audit, Foydalanuvchilar) yakunlangach, xavfsizlik nuqtai nazaridan Root Token bekor qilinishi lozim:
+Barcha sozlashlar (AppRole, Audit, Foydalanuvchilar) yakunlangach, xavfsizlik nuqtai nazaridan Initial Root Token bekor qilinishi shart!
 
+> [!CAUTION]
+> **QAT'IY QOIDA: Root tokenni o'chirishdan oldin yangi Admin User borligini tekshiring!**
+> Agar tizimda boshqa admin bo'lmasa va Root tokenni o'chirib yuborsangiz, boshqaruvni yo'qotasiz.
+
+#### 1. Yangi Admin user yaratilgani va ishlayotganini tekshiramiz:
 ```bash
-# Ehtiyot bo'ling: bu amal qaytarilmaydi! Boshqa admin hisobingiz borligiga ishonch hosil qiling!
-vault token revoke <ROOT_TOKEN>
+# Day 4 dagi admin user orqali login qilib ko'ring:
+vault login -method=userpass username=sarvar_admin
+# Agar login muvaffaqiyatli bo'lsa va huquqlari ishlayotgan bo'lsa, davom eting!
 ```
+
+#### 2. Root tokenni bekor qilish (Revoke):
+```bash
+# Initial Root Token bilan login qiling yoki tokenni ko'rsatib revoke qiling:
+vault token revoke <INITIAL_ROOT_TOKEN>
+```
+✅ Endi sizning tizimingiz to'liq **Production-ready** va xavfsiz holatda!
+
+#### 🚑 Favqulodda Holat (Agar adashib barcha adminlarsiz root o'chirib qo'yilsa):
+```bash
+# Shamir Unseal kalitlari yordamida yangi Root Token generatsiya qilish mumkin:
+vault operator generate-root -init
+# 3 ta Shamir kalit kiritilgach, yangi Root Token beriladi.
+```
+
 
 ---
 

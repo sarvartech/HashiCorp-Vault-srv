@@ -16,7 +16,7 @@
 | **Day 1** | **Vault Arxitekturasi, Barrier va Shamir Unseal** | 📖 [day-01/LECTURE.md](day-01/LECTURE.md) | 🛠️ [day-01/LAB_GUIDE.md](day-01/LAB_GUIDE.md) |
 | **Day 2** | **KV-v2 Secrets Engine, Versiyalash va REST API** | 📖 [day-02/LECTURE.md](day-02/LECTURE.md) | 🛠️ [day-02/LAB_GUIDE.md](day-02/LAB_GUIDE.md) |
 | **Day 3** | **Dinamik Sirlar (Database Engine & Leases)** | 📖 [day-03/LECTURE.md](day-03/LECTURE.md) | 🛠️ [day-03/LAB_GUIDE.md](day-03/LAB_GUIDE.md) |
-| **Day 4** | **Autentifikatsiya (AppRole) & HCL Policies** | 📖 [day-04/LECTURE.md](day-04/LECTURE.md) | 🛠️ [day-04/LAB_GUIDE.md](day-04/LAB_GUIDE.md) |
+| **Day 4** | **Autentifikatsiya (Userpass, Admin boshqaruvi, AppRole) & HCL Policies** | 📖 [day-04/LECTURE.md](day-04/LECTURE.md) | 🛠️ [day-04/LAB_GUIDE.md](day-04/LAB_GUIDE.md) |
 | **Day 5** | **PKI Secrets Engine & Ichki Sertifikatlar (mTLS)** | 📖 [day-05/LECTURE.md](day-05/LECTURE.md) | 🛠️ [day-05/LAB_GUIDE.md](day-05/LAB_GUIDE.md) |
 | **Day 6** | **Transit Engine (Encryption-as-a-Service - EaaS)** | 📖 [day-06/LECTURE.md](day-06/LECTURE.md) | 🛠️ [day-06/LAB_GUIDE.md](day-06/LAB_GUIDE.md) |
 | **Day 7** | **Production Hardening, Raft HA va Snapshot DR** | 📖 [day-07/LECTURE.md](day-07/LECTURE.md) | 🛠️ [day-07/LAB_GUIDE.md](day-07/LAB_GUIDE.md) |
@@ -476,7 +476,7 @@ Ushbu repozitoriyda murakkab CLI buyruqlarini eslab qolish shart bo'lmagan maxsu
 
 ## 8. ADMINISTRATORNING 5 TA QAT'IY TAQIQLANGAN XATOSI
 
-1. ❌ **Root Tokenni tarqatish:** Initial Root Token faqat birinchi o'rnatish uchun mo'ljallangan. Barcha sozlashlar tugagach, u bekor (revoke) qilinishi shart!
+1. ❌ **Root Tokenni tarqatish yoki Admin ochmasdan uni o'chirish:** Initial Root Token faqat birinchi o'rnatish uchun mo'ljallangan. Avval shaxsiy Admin user ochib, uning kirishini tekshirib, so'ngra Root token bekor (revoke) qilinishi shart! Agar admin ochmasdan root o'chirilsa tizim qulflanadi (lockout).
 2. ❌ **Unseal kalitlarini serverda qoldirish:** Unseal kalitlarini `/root/keys.txt` da saqlash — uyingiz kalitini eshik tutqichiga ilib qo'yish bilan barobar.
 3. ❌ **Audit Devices yoqmaslik:** Audit logi bo'lmagan Vault server ko'r odamga o'xshaydi.
 4. ❌ **Siyosatda `path "secret/*"` va `capabilities = ["*"]` berish:** Bu Zero-Trust falsafasini butunlay yo'qqa chiqaradi.
