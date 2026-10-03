@@ -197,28 +197,30 @@ Ushbu 14 soatlik workshop talabani **mutlaq 0 (boshlang'ich)** darajadan qabul q
 
 ---
 
-### 📌 7-KUN: [MASTER ADMIN] Raft HA Klaster, Falokatdan Tiklash (DR), Boshqaruv Skriptlari & Yakun
-**Maqsad: Yuqori bardoshli klaster (HA), 1-klikda zaxiralash va Vault Administratorlik sertifikati.**
+### 📌 7-KUN: [MASTER ADMIN] 🔥 3 Ta Serverda Raft HA Klaster Implementation, Failover Test & Yakun
+**Maqsad: 3 ta mustaqil serverda Production Raft HA klasterini noldan ko'tarish, Nginx Load Balancer, jonli Failover sinovi va zaxiradan tiklash.**
 
 1. **Nazariy qism (25 daqiqa):**
    - **Integrated Raft HA Klaster:** Leader, Follower, Quorum ($N/2 + 1$), Heartbeat va Saylov mexanizmi.
-   - Split-Brain xavfi va `peers.json` orqali favqulodda tiklash.
+   - Nega 2 ta emas, aynan 3 ta tugun? Split-Brain xavfi va `peers.json` orqali favqulodda tiklash.
+   - Load Balancer arxitekturasi: Active (HTTP 200) vs Standby (HTTP 429) tekshiruvi.
    - CIS Benchmark va Bank Hardening Checklist.
-   - `vault-srv` dagi maxsus asboblar: `vault_panel.py` (CLI) va `web_server.py` arxitekturasi tahlili.
 
 2. **Jonli Amaliyot (60 daqiqa):**
-   - Raft Snapshot olish: `vault operator raft snapshot save /backups/vault_backup.snap`.
-   - Serverni ataylab "yo'q qilish" (barcha ma'lumotlarni o'chirib tashlash).
-   - Snapshotdan qayta tiklash: `vault operator raft snapshot restore -force ...`.
-   - `vault_panel.py` dagi **Production Doctor** modulini yurgizib tizim sog'lig'ini tekshirish.
-   - Web Konsoldagi Spotlight (`Ctrl+K`), Live Test Request va 6 tildagi kod generatorlarini sinash.
+   - 3 ta tugun (`vault-node1`, `vault-node2`, `vault-node3`) konfiguratsiyasi (`storage "raft"`, `cluster_addr`, `api_addr`).
+   - 1-tugunni initsializatsiya qilish va unseal qilish.
+   - 2 va 3-tugunlarni klasterga ulash: `vault operator raft join http://...:8200` va unseal.
+   - Kvorum tekshiruvi: `vault operator raft list-peers` (3 ta Voter).
+   - Nginx Load Balancer'ni `/v1/sys/health` bilan ulash.
+   - Raft Snapshot zaxira olish: `vault operator raft snapshot save ...`.
 
 3. **Troubleshooting & Avariya Laboratoriyasi (20 daqiqa):**
-   - Unseal kalitlari bitta adminning qo'lida qolib ketganda nima bo'ladi?
-   - Quorum yo'qotilganda klaster qanday jonlantiriladi?
+   - **💥 Jonli Failover Test:** Node 1 (Leader) ni `systemctl stop vault` qilib o'chirish va 1 soniyada Node 2 yangi Leader bo'lishini ko'rsatish!
+   - Node 1 ni qayta yoqib, Follower sifatida qaytib kelishini isbotlash.
+   - Zaxiradan qayta tiklash: `vault operator raft snapshot restore -force ...`.
 
 4. **Katta Q&A, Yakuniy Imtihon va Sertifikatlash (15 daqiqa):**
-   - Efir tomoshabinlari va oflayn talabalar bilan ochiq muloqot, sertifikatlash va masterclass yakuni!
+   - Efir tomoshabinlari va oflayn talabalar bilan ochiq muloqot, sertifikatlash va 7 kunlik challenge yakuni!
 
 ---
 

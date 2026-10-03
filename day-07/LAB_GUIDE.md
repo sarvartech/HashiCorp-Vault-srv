@@ -1,131 +1,264 @@
 # 🛠️ DAY 7: AMALIY QO'LLANMA (LAB GUIDE)
-## Audit Logging, Raft Snapshot Zaxiralash va Favqulodda Tiklash
+## 🔥 3 TA SERVERDA PRODUCTION RAFT HA KLASTERNI SOZLASH VA FAILOVER TEST
 
-Kursning so'nggi kunida biz ishlab chiqarish tizimi uchun Audit jurnalini yoqamiz, butun Vault ma'lumotlar bazasining zaxira nusxasini (Snapshot) olamiz va uni qayta tiklashni (Disaster Recovery) sinaymiz.
+Bugungi amaliyotda biz korporativ banklar va yirik IT kompaniyalar talabiga mos bo'lgan **3 ta mustaqil tugundan iborat Raft HA Klasterini** noldan quramiz, tugunlarni birlashtiramiz, Nginx Load Balancerni ulaymiz va jonli ravishda serverni "o'chirib" failover'ni sinaymiz!
 
 ---
 
-### 1-Qadam: Audit Device (Audit Log) Yoqish
+### 🖥️ Infratuzilma Rejasi (3 ta VM / Server):
 
-Vault'da xavfsizlik auditini yoqmasdan turib uni ishlab chiqarishga chiqarish qat'iyan man etiladi.
+| Server Nomi | IP Manzili | Roli | API Manzili (`api_addr`) | Raft Manzili (`cluster_addr`) |
+| :--- | :--- | :--- | :--- | :--- |
+| **vault-node1** | `192.168.10.11` | Birlamchi Leader | `http://192.168.10.11:8200` | `http://192.168.10.11:8201` |
+| **vault-node2** | `192.168.10.12` | Standby Follower | `http://192.168.10.12:8200` | `http://192.168.10.12:8201` |
+| **vault-node3** | `192.168.10.13` | Standby Follower | `http://192.168.10.13:8200` | `http://192.168.10.13:8201` |
 
+*(Izoh: Agar bitta jismoniy mashinada sinayotgan bo'lsangiz, 3 ta alohida Multipass VM yoki alohida portlar orqali ham xuddi shu mantiqda bajarishingiz mumkin).*
+
+---
+
+### 1-Qadam: Har Bir Tugunda Konfiguratsiyani Sozlash
+
+Har bir serverda `/etc/vault.d/vault.hcl` faylini ochib, quyidagicha to'ldiramiz:
+
+#### 📌 NODE 1 (`192.168.10.11` da):
+```hcl
+storage "raft" {
+  path    = "/opt/vault/data"
+  node_id = "node1"
+}
+
+listener "tcp" {
+  address       = "0.0.0.0:8200"
+  tls_disable   = 1    # Ishlab chiqarishda TLS sertifikat ulanadi
+}
+
+api_addr      = "http://192.168.10.11:8200"
+cluster_addr  = "http://192.168.10.11:8201"
+ui            = true
+disable_mlock = false
+```
+
+#### 📌 NODE 2 (`192.168.10.12` da):
+```hcl
+storage "raft" {
+  path    = "/opt/vault/data"
+  node_id = "node2"
+}
+
+listener "tcp" {
+  address       = "0.0.0.0:8200"
+  tls_disable   = 1
+}
+
+api_addr      = "http://192.168.10.12:8200"
+cluster_addr  = "http://192.168.10.12:8201"
+ui            = true
+disable_mlock = false
+```
+
+#### 📌 NODE 3 (`192.168.10.13` da):
+```hcl
+storage "raft" {
+  path    = "/opt/vault/data"
+  node_id = "node3"
+}
+
+listener "tcp" {
+  address       = "0.0.0.0:8200"
+  tls_disable   = 1
+}
+
+api_addr      = "http://192.168.10.13:8200"
+cluster_addr  = "http://192.168.10.13:8201"
+ui            = true
+disable_mlock = false
+```
+
+Barcha serverlarda xizmatni yoqing:
+```bash
+sudo systemctl restart vault
+sudo systemctl enable vault
+```
+
+---
+
+### 2-Qadam: NODE 1 ni Initsializatsiya Qilish va Unseal Qilish
+
+Klasterda faqat **1-tugun** initsializatsiya qilinadi! Qolgan tugunlar esa unga ulanadi.
+
+```bash
+# Node 1 da turib bajaramiz:
+export VAULT_ADDR="http://127.0.0.1:8200"
+
+# Initsializatsiya:
+vault operator init -key-shares=5 -key-threshold=3
+```
+> [!IMPORTANT]
+> Chiqqan 5 ta **Unseal Key** va 1 ta **Initial Root Token**ni xavfsiz joyga saqlab oling! Ushbu kalitlar barcha 3 ta tugun uchun yagona bo'ladi.
+
+Endi Node 1 ni muhrdan ochamiz (3 ta kalit bilan):
+```bash
+vault operator unseal  # 1-kalit
+vault operator unseal  # 2-kalit
+vault operator unseal  # 3-kalit
+
+vault status
+```
+✅ `HA Enabled: true` va `Mode: active` ekanligiga ishonch hosil qiling!
+
+---
+
+### 3-Qadam: NODE 2 va NODE 3 ni Klasterga Birlashtirish (`raft join`)
+
+Endi qolgan ikkita serverni Leader tugunga ulaymiz:
+
+#### 📌 NODE 2 da:
 ```bash
 export VAULT_ADDR="http://127.0.0.1:8200"
+
+# 1-tugunga ulanish buyrug'i:
+vault operator raft join http://192.168.10.11:8200
+
+# Muvaffaqiyatli ulangach, Node 2 ni ham xuddi o'sha Shamir kalitlari bilan Unseal qilamiz:
+vault operator unseal  # (1-kalit)
+vault operator unseal  # (2-kalit)
+vault operator unseal  # (3-kalit)
+
+vault status
+```
+*Natija:* `Mode: standby` bo'lib turadi. Bu to'g'ri!
+
+#### 📌 NODE 3 da:
+```bash
+export VAULT_ADDR="http://127.0.0.1:8200"
+
+# 1-tugunga ulanish:
+vault operator raft join http://192.168.10.11:8200
+
+# Shamir kalitlari bilan Unseal qilish:
+vault operator unseal
+vault operator unseal
+vault operator unseal
+
+vault status
+```
+
+---
+
+### 4-Qadam: Klaster Kvorumi va Ishtirokchilarni Tekshirish
+
+Node 1 da turib klasterdagi barcha tugunlar holatini ko'ramiz:
+
+```bash
 export VAULT_TOKEN="<ROOT_TOKEN>"
-
-# Log papkasini yaratish va huquq berish
-sudo mkdir -p /var/log/vault
-sudo chown -R vault:vault /var/log/vault
-
-# File audit qurilmasini faollashtirish
-vault audit enable file file_path=/var/log/vault/vault_audit.log
-
-# Faolligini tekshirish
-vault audit list
-```
-
----
-
-### 2-Qadam: Audit Logning Shifrlanganligini (HMAC) Tekshirish
-
-Keling, biror sirni o'qib ko'ramiz va logda nima yozilishini tekshiramiz:
-
-```bash
-vault kv get secret/production/database
-
-# Log faylining oxirgi qatorini ko'ramiz
-sudo tail -n 1 /var/log/vault/vault_audit.log | jq
-```
-
-> **Diqqat qiling:** Logda parollar yoki tokenlar ochiq ko'rinmaydi! Barcha maxfiy ma'lumotlar `hmac-sha256:abcd...` shaklida shifrlangan bo'ladi. Tizim administratori ham parolni logdan ko'ra olmaydi.
-
----
-
-### 3-Qadam: Raft Integrated Storage Holatini Ko'rish
-
-```bash
 vault operator raft list-peers
 ```
-Siz klasterdagi tugunlar (Node ID, manzil, holat - Leader/Follower) ro'yxatini ko'rasiz.
+
+**Kutilgan Natija (3 ta Voter):**
+```text
+Node     Address               State       Voter
+----     -------               -----       -----
+node1    192.168.10.11:8201    leader      true
+node2    192.168.10.12:8201    follower    true
+node3    192.168.10.13:8201    follower    true
+```
+🎉 **Tabriklaymiz! 3 ta tugunli to'liq Quorumga ega Raft HA Klasteri barpo etildi!**
 
 ---
 
-### 4-Qadam: Zaxira Nusxa (Raft Snapshot) Olish
+### 5-Qadam: Nginx Load Balancerni Sozlash
 
-Butun Vault klasterining (barcha sirlar, siyosatlar, konfiguratsiyalar) bir zumlik to'liq nusxasini olamiz:
+Mijozlar alohida IP'lar bilan emas, bitta yagona manzil bilan ishlashi uchun Nginx'da sog'liqni tekshiruvchi upstream sozlaymiz:
 
-```bash
-vault operator raft snapshot save /home/doker/vault_backup_$(date +%F).snap
+```nginx
+upstream vault_cluster {
+    server 192.168.10.11:8200;
+    server 192.168.10.12:8200;
+    server 192.168.10.13:8200;
+}
 
-ls -lh /home/doker/*.snap
+server {
+    listen 80;
+    server_name vault.company.uz;
+
+    location / {
+        proxy_pass http://vault_cluster;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_next_upstream error timeout http_502 http_503 http_504;
+    }
+}
 ```
-> Ushbu `.snap` fayli barcha ma'lumotlarni o'zida saqlaydi (albatta, shifrlangan holatda!).
 
 ---
 
-### 5-Qadam: Favqulodda Tiklash (Disaster Recovery Test)
+### 6-Qadam: 💥 KATTA AVARIYA VA FAILOVER TESTI!
 
-Keling, halokat holatini simulyatsiya qilamiz. Tasavvur qiling, qaysidir dasturchi muhim ma'lumotni o'chirib yubordi:
+Keling, haqiqiy avariyaning oldini olish qobiliyatini tekshiramiz.
 
+#### 1. Yangi ma'lumot yozamiz:
 ```bash
-# Sirni o'chiramiz
-vault kv destroy -versions=1,2 secret/production/database
-vault kv get secret/production/database
-```
-> Ma'lumot yo'qoldi!
-
-Endi zaxira faylimizdan butun tizimni oldingi holatiga qaytaramiz:
-
-```bash
-vault operator raft snapshot restore -force /home/doker/vault_backup_*.snap
+vault kv put secret/company/database password="super_secret_production_password"
 ```
 
-Qayta tiklangach, sirni yana tekshirib ko'ramiz:
+#### 2. Node 1 (Active Leader) ni ataylab o'chiramiz:
 ```bash
-vault kv get secret/production/database
+# Node 1 terminalida:
+sudo systemctl stop vault
 ```
-🎉 **Ma'lumotlarimiz to'liq qayta tiklandi!**
+
+#### 3. Darhol Node 2 yoki Node 3 da tekshiramiz:
+```bash
+# Node 2 da:
+vault status
+```
+Ko'rasizki, Node 2 yoki Node 3 **1 soniya ichida o'zini yangi LEADER etib sayladi!**
+```text
+HA Enabled: true
+Mode: active     <-- Node 2 avtomatik Leader bo'ldi!
+```
+
+#### 4. Ma'lumot yo'qolmaganini tekshiramiz:
+```bash
+vault kv get secret/company/database
+```
+Ma'lumotlar to'liq joyida va xizmat 1 soniyaga ham to'xtamadi!
+
+#### 5. O'chgan Node 1 ni qayta yoqamiz:
+```bash
+# Node 1 da:
+sudo systemctl start vault
+# (Agar auto-unseal bo'lmasa, unseal qilinadi)
+vault status
+```
+Node 1 klasterga yangi Leader sifatida emas, balki intizomli **Follower (Standby)** sifatida qaytib qo'shiladi!
 
 ---
 
-### 6-Qadam: Root Tokendan Xalos Bo'lish (Root Token Revoke)
+### 7-Qadam: Klaster Zaxira Nusxasini (Raft Snapshot) Olish
 
-Barcha sozlashlar (AppRole, Audit, Foydalanuvchilar) yakunlangach, xavfsizlik nuqtai nazaridan Initial Root Token bekor qilinishi shart!
+Butun 3 ta tugunning to'liq arxivini bitta faylga saqlab olamiz:
 
-> [!CAUTION]
-> **QAT'IY QOIDA: Root tokenni o'chirishdan oldin yangi Admin User borligini tekshiring!**
-> Agar tizimda boshqa admin bo'lmasa va Root tokenni o'chirib yuborsangiz, boshqaruvni yo'qotasiz.
-
-#### 1. Yangi Admin user yaratilgani va ishlayotganini tekshiramiz:
 ```bash
-# Day 4 dagi admin user orqali login qilib ko'ring:
-vault login -method=userpass username=sarvar_admin
-# Agar login muvaffaqiyatli bo'lsa va huquqlari ishlayotgan bo'lsa, davom eting!
+vault operator raft snapshot save /backups/vault_ha_backup_$(date +%F).snap
+
+ls -lh /backups/*.snap
 ```
 
-#### 2. Root tokenni bekor qilish (Revoke):
-```bash
-# Initial Root Token bilan login qiling yoki tokenni ko'rsatib revoke qiling:
-vault token revoke <INITIAL_ROOT_TOKEN>
-```
-✅ Endi sizning tizimingiz to'liq **Production-ready** va xavfsiz holatda!
+---
 
-#### 🚑 Favqulodda Holat (Agar adashib barcha adminlarsiz root o'chirib qo'yilsa):
-```bash
-# Shamir Unseal kalitlari yordamida yangi Root Token generatsiya qilish mumkin:
-vault operator generate-root -init
-# 3 ta Shamir kalit kiritilgach, yangi Root Token beriladi.
-```
+### 8-Qadam: Root Tokendan Xalos Bo'lish (Production Ready!)
 
+```bash
+vault token revoke <ROOT_TOKEN>
+```
 
 ---
 
 ### 🏆 TABRIKLAYMIZ!
-Siz **"7 Kunda Mastering HashiCorp Vault"** kursini muvaffaqiyatli yakunladingiz! Endi siz:
-* Vault arxitekturasini,
-* KV-v2 va versiyalashni,
-* Vaqtinchalik dinamik ma'lumotlar bazasi hisoblarini,
-* AppRole va eng kam imtiyozli HCL siyosatlarini,
-* Ichki CA va SSL/TLS sertifikatlarini boshqarishni,
-* Transit orqali dastur ma'lumotlarini shifrlashni (EaaS),
-* Raft HA, Audit va Disaster Recovery mexanizmlarini to'liq o'zlashtirdingiz!
+Siz 7 kunlik intensiv challengeni muvaffaqiyatli yakunladingiz! 
+Endi siz:
+* Oddiy parollardan qutulib, butun tashkilot uchun xavfsiz Zero-Trust arxitekturasini qura olasiz;
+* 3 ta serverdan iborat yuqori bardoshli **Raft HA Klasterini** ishlab chiqarish (Production) darajasida mustaqil administratsiya qila olasiz!
